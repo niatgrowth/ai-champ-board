@@ -1,14 +1,26 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Navbar from '@/components/Navbar';
+import HeroSection from '@/components/HeroSection';
+import ChampionsSection from '@/components/ChampionsSection';
+import OverallLeaderboard from '@/components/OverallLeaderboard';
+import WeeklyLeaderboard from '@/components/WeeklyLeaderboard';
+import SearchSection from '@/components/SearchSection';
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main>
+        <HeroSection />
+        <ChampionsSection />
+        <OverallLeaderboard />
+        <WeeklyLeaderboard />
+        <SearchSection />
+      </main>
+      <footer className="border-t border-border/30 py-8 px-4 text-center">
+        <p className="text-muted-foreground text-sm">
+          © 2024 <span className="text-primary font-semibold">NIAT India</span> — AI Bootcamp Leaderboard. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
-};
-
-export default Index;
+}
