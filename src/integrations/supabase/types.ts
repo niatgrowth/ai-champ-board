@@ -14,7 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          attendance_count: number
+          best_weekly_score: number
+          created_at: string
+          cumulative_score: number
+          id: string
+          league: string
+          mobile: string | null
+          name: string
+          projects_submitted: number
+        }
+        Insert: {
+          attendance_count?: number
+          best_weekly_score?: number
+          created_at?: string
+          cumulative_score?: number
+          id?: string
+          league: string
+          mobile?: string | null
+          name: string
+          projects_submitted?: number
+        }
+        Update: {
+          attendance_count?: number
+          best_weekly_score?: number
+          created_at?: string
+          cumulative_score?: number
+          id?: string
+          league?: string
+          mobile?: string | null
+          name?: string
+          projects_submitted?: number
+        }
+        Relationships: []
+      }
+      weekly_scores: {
+        Row: {
+          attendance: boolean
+          bonus: number
+          created_at: string
+          id: string
+          marks: number
+          student_id: string
+          week_number: number
+          weekly_score: number
+        }
+        Insert: {
+          attendance?: boolean
+          bonus?: number
+          created_at?: string
+          id?: string
+          marks?: number
+          student_id: string
+          week_number: number
+          weekly_score?: number
+        }
+        Update: {
+          attendance?: boolean
+          bonus?: number
+          created_at?: string
+          id?: string
+          marks?: number
+          student_id?: string
+          week_number?: number
+          weekly_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_scores_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
