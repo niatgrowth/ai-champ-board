@@ -2,95 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Deep Blue & Gold Design System */
+    --background: 228 47% 7%;
+    --foreground: 210 40% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 228 40% 11%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 228 40% 11%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 228 47% 7%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 228 35% 18%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 228 35% 15%;
+    --muted-foreground: 215 20% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 43 96% 56%;
+    --accent-foreground: 228 47% 7%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 228 35% 20%;
+    --input: 228 35% 18%;
+    --ring: 43 96% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* League colors */
+    --platinum: 186 100% 72%;
+    --platinum-foreground: 228 47% 7%;
+    --gold-league: 43 96% 56%;
+    --gold-league-foreground: 228 47% 7%;
+    --silver: 220 13% 69%;
+    --silver-foreground: 228 47% 7%;
+    --bronze: 25 75% 55%;
+    --bronze-foreground: 210 40% 96%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Rank colors */
+    --rank-1: 43 96% 56%;
+    --rank-2: 220 13% 75%;
+    --rank-3: 25 75% 55%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Glass effect */
+    --glass-bg: 228 40% 14%;
+    --glass-border: 228 30% 25%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 228 47% 7%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 228 47% 7%;
+    --sidebar-accent: 228 35% 18%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 228 35% 20%;
+    --sidebar-ring: 43 96% 56%;
   }
 }
 
@@ -101,5 +72,74 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background: linear-gradient(135deg, hsl(228, 47%, 5%) 0%, hsl(230, 50%, 9%) 50%, hsl(228, 45%, 7%) 100%);
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    background: hsl(var(--glass-bg) / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--glass-border) / 0.6);
+  }
+
+  .gold-text {
+    color: hsl(var(--gold-league));
+  }
+
+  .gold-gradient {
+    background: linear-gradient(135deg, hsl(43, 96%, 56%), hsl(38, 100%, 60%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .platinum-text {
+    color: hsl(var(--platinum));
+  }
+
+  .silver-text {
+    color: hsl(var(--silver));
+  }
+
+  .bronze-text {
+    color: hsl(var(--bronze));
+  }
+
+  .hero-gradient {
+    background: radial-gradient(ellipse at top center, hsl(228, 60%, 18%) 0%, transparent 70%);
+  }
+
+  .table-row-highlight {
+    background: hsl(var(--primary) / 0.06);
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 20px hsl(43, 96%, 56%, 0.25), 0 4px 20px hsl(228, 47%, 5%, 0.4);
+  }
+
+  .glow-platinum {
+    box-shadow: 0 0 20px hsl(186, 100%, 72%, 0.2), 0 4px 20px hsl(228, 47%, 5%, 0.4);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 2px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.5);
+    border-radius: 2px;
   }
 }
