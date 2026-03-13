@@ -16,9 +16,9 @@ export default function Index() {
         <WeeklyLeaderboard />
         <SearchSection />
       </main>
-      <footer className="border-t border-border/30 py-8 px-4 text-center">
+      <footer className="border-t border-border py-8 px-4 text-center bg-white/60">
         <p className="text-muted-foreground text-sm">
-          © 2024 <span className="text-primary font-semibold">NIAT India</span> — AI Bootcamp Leaderboard. All rights reserved.
+          © 2025 <span className="text-primary font-semibold">NIAT India</span> — AI Bootcamp Leaderboard. All rights reserved.
         </p>
       </footer>
     </div>
