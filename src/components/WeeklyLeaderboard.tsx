@@ -219,7 +219,7 @@ export default function WeeklyLeaderboard() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="font-semibold text-foreground">{score.marks}</span>
+                            <span className="font-semibold text-foreground">{score.effectiveMarks}</span>
                             <span className="text-muted-foreground text-xs">/40</span>
                           </TableCell>
                           <TableCell className="text-center hidden sm:table-cell">
@@ -251,7 +251,7 @@ export default function WeeklyLeaderboard() {
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="font-bold text-primary text-base">{score.weekly_score}</span>
+                            <span className="font-bold text-primary text-base">{score.computed_weekly_score}</span>
                           </TableCell>
                         </TableRow>
                       ))}
