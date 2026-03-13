@@ -151,7 +151,7 @@ export default function WeeklyLeaderboard() {
                       <li>🏆 Winner (Wk 1–11 top 2, Wk 12–16 top 1): <span className="text-foreground font-medium">+30</span></li>
                       <li>🥈 Runner Up (next 10): <span className="text-foreground font-medium">+15</span></li>
                     </ul>
-                    <p className="mt-1.5 text-foreground font-medium">Max ≈ 115</p>
+                    <p className="mt-1.5 text-foreground font-medium">Max = 100</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
