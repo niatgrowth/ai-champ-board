@@ -41,25 +41,38 @@ function computeEnrichedScores(
   scores: Array<{ id: string; marks: number; attendance: boolean; bonus: number; weekly_score: number; students?: { name: string; league: string } }>,
   weekNumber: number
 ) {
-  // Sort by weekly_score desc (already sorted from DB, but re-sort to be safe)
-  const sorted = [...scores].sort((a, b) => b.weekly_score - a.weekly_score);
-
   const winnerCount = weekNumber <= 11 ? 2 : 1;
-  const runnerUpEnd = winnerCount + 10; // next 10 after winners
+  const runnerUpEnd = winnerCount + 10;
+
+  // If project not submitted (bonus === 0), project eval score is also 0
+  const enriched = scores.map((score) => {
+    const projectSubmission = score.bonus > 0 ? 10 : 0;
+    const effectiveMarks = projectSubmission > 0 ? score.marks : 0;
+    const attendanceScore = score.attendance ? 20 : 0;
+    return { ...score, effectiveMarks, attendanceScore, projectSubmission };
+  });
+
+  // Re-sort by computed weekly score: effectiveMarks + attendanceScore + projectSubmission + winner + runnerUp
+  // We sort first without winner/runnerUp to determine ranks
+  const sorted = [...enriched].sort(
+    (a, b) =>
+      (b.effectiveMarks + b.attendanceScore + b.projectSubmission) -
+      (a.effectiveMarks + a.attendanceScore + a.projectSubmission)
+  );
 
   return sorted.map((score, idx) => {
     const rank = idx + 1;
-    const attendance = score.attendance ? 20 : 0;
-    const projectSubmission = score.bonus > 0 ? 10 : 0;
-    const winner = rank <= winnerCount ? 30 : 0;
-    const runnerUp = rank > winnerCount && rank <= runnerUpEnd ? 15 : 0;
+    const winnerBonus = rank <= winnerCount ? 30 : 0;
+    const runnerUpBonus = rank > winnerCount && rank <= runnerUpEnd ? 15 : 0;
+    const computedWeeklyScore =
+      score.effectiveMarks + score.attendanceScore + score.projectSubmission + winnerBonus + runnerUpBonus;
     return {
       ...score,
       rank,
-      attendanceScore: attendance,
-      projectSubmissionScore: projectSubmission,
-      winnerBonus: winner,
-      runnerUpBonus: runnerUp,
+      projectSubmissionScore: score.projectSubmission,
+      winnerBonus,
+      runnerUpBonus,
+      computed_weekly_score: computedWeeklyScore,
     };
   });
 }
@@ -138,7 +151,7 @@ export default function WeeklyLeaderboard() {
                       <li>🏆 Winner (Wk 1–11 top 2, Wk 12–16 top 1): <span className="text-foreground font-medium">+30</span></li>
                       <li>🥈 Runner Up (next 10): <span className="text-foreground font-medium">+15</span></li>
                     </ul>
-                    <p className="mt-1.5 text-foreground font-medium">Max ≈ 115</p>
+                    <p className="mt-1.5 text-foreground font-medium">Max = 100</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -206,7 +219,7 @@ export default function WeeklyLeaderboard() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="font-semibold text-foreground">{score.marks}</span>
+                            <span className="font-semibold text-foreground">{score.effectiveMarks}</span>
                             <span className="text-muted-foreground text-xs">/40</span>
                           </TableCell>
                           <TableCell className="text-center hidden sm:table-cell">
@@ -238,7 +251,7 @@ export default function WeeklyLeaderboard() {
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="font-bold text-primary text-base">{score.weekly_score}</span>
+                            <span className="font-bold text-primary text-base">{score.computed_weekly_score}</span>
                           </TableCell>
                         </TableRow>
                       ))}

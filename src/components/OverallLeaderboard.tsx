@@ -117,9 +117,6 @@ function LeagueTable({
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full ${league.dotColor}`} />
           <span className="text-lg font-bold text-foreground">{league.label}</span>
-          <span className="text-xs text-muted-foreground bg-white/70 px-2 py-0.5 rounded-full border border-border/50 font-medium">
-            {students.length} students · {league.percent}
-          </span>
         </div>
         {expanded ? (
           <ChevronUp className="w-4 h-4 text-muted-foreground" />
