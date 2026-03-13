@@ -9,94 +9,181 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useStudents } from '@/hooks/useLeaderboard';
-import { getLeagueColor, getLeagueLabel, getInitials } from '@/lib/leaderboard-utils';
+import { getInitials } from '@/lib/leaderboard-utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { League } from '@/lib/supabase';
+import type { Student } from '@/lib/supabase';
 
-const LEAGUES: { id: League; label: string; colorClass: string; headerBg: string }[] = [
-  { id: 'platinum', label: 'Platinum League', colorClass: 'text-platinum border-platinum/40', headerBg: 'from-cyan-400/15 to-transparent' },
-  { id: 'gold', label: 'Gold League', colorClass: 'text-gold-league border-gold-league/40', headerBg: 'from-yellow-500/15 to-transparent' },
-  { id: 'silver', label: 'Silver League', colorClass: 'text-silver border-silver/40', headerBg: 'from-slate-400/15 to-transparent' },
-  { id: 'bronze', label: 'Bronze League', colorClass: 'text-bronze border-bronze/40', headerBg: 'from-amber-700/15 to-transparent' },
+/** Dynamic league distribution: 10% Platinum, 20% Gold, 30% Silver, 40% Bronze */
+function distributeLeagues(students: Student[]): {
+  platinum: Student[];
+  gold: Student[];
+  silver: Student[];
+  bronze: Student[];
+} {
+  const sorted = [...students].sort((a, b) => b.cumulative_score - a.cumulative_score);
+  const total = sorted.length;
+
+  const platCount = Math.max(1, Math.round(total * 0.10));
+  const goldCount = Math.max(1, Math.round(total * 0.20));
+  const silverCount = Math.max(1, Math.round(total * 0.30));
+
+  const platinum = sorted.slice(0, platCount);
+  const gold = sorted.slice(platCount, platCount + goldCount);
+  const silver = sorted.slice(platCount + goldCount, platCount + goldCount + silverCount);
+  const bronze = sorted.slice(platCount + goldCount + silverCount);
+
+  return { platinum, gold, silver, bronze };
+}
+
+const LEAGUES = [
+  {
+    id: 'platinum' as const,
+    label: 'Platinum League',
+    headerClass: 'league-platinum-bg',
+    scoreColor: 'text-platinum',
+    percent: 'Top 10%',
+    dotColor: 'bg-blue-500',
+  },
+  {
+    id: 'gold' as const,
+    label: 'Gold League',
+    headerClass: 'league-gold-bg',
+    scoreColor: 'text-primary',
+    percent: 'Next 20%',
+    dotColor: 'bg-amber-400',
+  },
+  {
+    id: 'silver' as const,
+    label: 'Silver League',
+    headerClass: 'league-silver-bg',
+    scoreColor: 'text-silver',
+    percent: 'Next 30%',
+    dotColor: 'bg-slate-400',
+  },
+  {
+    id: 'bronze' as const,
+    label: 'Bronze League',
+    headerClass: 'league-bronze-bg',
+    scoreColor: 'text-bronze',
+    percent: 'Remaining 40%',
+    dotColor: 'bg-amber-600',
+  },
 ];
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-yellow-500/20 text-yellow-400 font-black text-sm border border-yellow-400/30">1</span>;
-  if (rank === 2) return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-500/20 text-slate-300 font-black text-sm border border-slate-400/30">2</span>;
-  if (rank === 3) return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-700/20 text-amber-500 font-black text-sm border border-amber-600/30">3</span>;
-  return <span className="text-muted-foreground font-medium text-sm w-7 text-center inline-block">{rank}</span>;
+  if (rank === 1)
+    return (
+      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-yellow-100 text-yellow-600 font-black text-sm border border-yellow-300">
+        1
+      </span>
+    );
+  if (rank === 2)
+    return (
+      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-500 font-black text-sm border border-slate-300">
+        2
+      </span>
+    );
+  if (rank === 3)
+    return (
+      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-600 font-black text-sm border border-amber-300">
+        3
+      </span>
+    );
+  return (
+    <span className="text-muted-foreground font-medium text-sm w-7 text-center inline-block">
+      {rank}
+    </span>
+  );
 }
 
-function LeagueTable({ league }: { league: typeof LEAGUES[0] }) {
-  const { data: students, isLoading } = useStudents(league.id);
+function LeagueTable({
+  league,
+  students,
+  globalOffset,
+}: {
+  league: (typeof LEAGUES)[0];
+  students: Student[];
+  globalOffset: number;
+}) {
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden border border-border/50 animate-fade-in">
+    <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center justify-between p-5 bg-gradient-to-r ${league.headerBg} hover:bg-card/30 transition-colors`}
+        className={`w-full flex items-center justify-between p-5 ${league.headerClass} hover:opacity-90 transition-opacity`}
       >
         <div className="flex items-center gap-3">
-          <Trophy className={`w-5 h-5 ${league.colorClass.split(' ')[0]}`} />
-          <span className={`text-lg font-bold ${league.colorClass.split(' ')[0]}`}>{league.label}</span>
-          {students && (
-            <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
-              {students.length} students
-            </span>
-          )}
+          <div className={`w-3 h-3 rounded-full ${league.dotColor}`} />
+          <span className="text-lg font-bold text-foreground">{league.label}</span>
+          <span className="text-xs text-muted-foreground bg-white/70 px-2 py-0.5 rounded-full border border-border/50 font-medium">
+            {students.length} students · {league.percent}
+          </span>
         </div>
-        {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        )}
       </button>
 
       {expanded && (
         <div className="overflow-x-auto scrollbar-thin">
           <Table>
             <TableHeader>
-              <TableRow className="border-border/40 hover:bg-transparent">
-                <TableHead className="text-muted-foreground w-14">Rank</TableHead>
-                <TableHead className="text-muted-foreground">Student Name</TableHead>
-                <TableHead className="text-muted-foreground text-right">Cumulative</TableHead>
-                <TableHead className="text-muted-foreground text-right hidden sm:table-cell">Best Week</TableHead>
-                <TableHead className="text-muted-foreground text-right hidden md:table-cell">Projects</TableHead>
-                <TableHead className="text-muted-foreground text-right hidden md:table-cell">Attendance</TableHead>
+              <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
+                <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
+                <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
+                <TableHead className="text-muted-foreground text-right font-semibold">
+                  Cumulative Score
+                </TableHead>
+                <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">
+                  Best Weekly
+                </TableHead>
+                <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">
+                  Projects
+                </TableHead>
+                <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">
+                  Attendance
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading
-                ? Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i} className="border-border/20">
-                    <TableCell><Skeleton className="h-5 w-7" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-12 ml-auto" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-                : students?.map((student, idx) => (
-                  <TableRow
-                    key={student.id}
-                    className={`border-border/20 transition-colors hover:bg-card/40 ${idx < 3 ? 'table-row-highlight' : ''}`}
-                  >
-                    <TableCell><RankBadge rank={idx + 1} /></TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0">
-                          {getInitials(student.name)}
-                        </div>
-                        <span className="font-medium text-foreground text-sm">{student.name}</span>
+              {students.map((student, idx) => (
+                <TableRow
+                  key={student.id}
+                  className={`border-border/30 transition-colors hover:bg-secondary/40 ${
+                    idx < 3 ? 'table-row-highlight' : ''
+                  }`}
+                >
+                  <TableCell>
+                    <RankBadge rank={globalOffset + idx + 1} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0 border border-border/50">
+                        {getInitials(student.name)}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className={`font-bold ${league.colorClass.split(' ')[0]}`}>{student.cumulative_score}</span>
-                    </TableCell>
-                    <TableCell className="text-right text-foreground hidden sm:table-cell">{student.best_weekly_score}</TableCell>
-                    <TableCell className="text-right text-muted-foreground hidden md:table-cell">{student.projects_submitted}</TableCell>
-                    <TableCell className="text-right text-muted-foreground hidden md:table-cell">{student.attendance_count}</TableCell>
-                  </TableRow>
-                ))}
+                      <span className="font-medium text-foreground text-sm">{student.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={`font-bold ${league.scoreColor}`}>
+                      {student.cumulative_score}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right text-foreground hidden sm:table-cell font-medium">
+                    {student.best_weekly_score}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground hidden md:table-cell">
+                    {student.projects_submitted}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground hidden md:table-cell">
+                    {student.attendance_count}
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
@@ -106,24 +193,60 @@ function LeagueTable({ league }: { league: typeof LEAGUES[0] }) {
 }
 
 export default function OverallLeaderboard() {
+  const { data: allStudents, isLoading } = useStudents();
+
+  const distributed = allStudents ? distributeLeagues(allStudents) : null;
+
+  const leagueOffsets = distributed
+    ? {
+        platinum: 0,
+        gold: distributed.platinum.length,
+        silver: distributed.platinum.length + distributed.gold.length,
+        bronze:
+          distributed.platinum.length +
+          distributed.gold.length +
+          distributed.silver.length,
+      }
+    : null;
+
   return (
     <section id="leaderboard" className="py-16 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground text-sm font-medium mb-4">
+          <div className="section-badge">
             <Trophy className="w-4 h-4 text-primary" />
             Overall Rankings
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             League <span className="gold-gradient">Leaderboard</span>
           </h2>
-          <p className="text-muted-foreground">Sorted by cumulative score across all 4 leagues</p>
+          <p className="text-muted-foreground">
+            Dynamic league distribution based on total participants
+          </p>
         </div>
 
         <div className="flex flex-col gap-6">
-          {LEAGUES.map((league) => (
-            <LeagueTable key={league.id} league={league} />
-          ))}
+          {isLoading
+            ? [0, 1, 2, 3].map((i) => (
+                <div key={i} className="glass-card rounded-2xl overflow-hidden">
+                  <Skeleton className="h-16 w-full" />
+                  <div className="p-4 flex flex-col gap-3">
+                    {[0, 1, 2, 3, 4].map((j) => (
+                      <Skeleton key={j} className="h-10 w-full" />
+                    ))}
+                  </div>
+                </div>
+              ))
+            : distributed &&
+              leagueOffsets &&
+              LEAGUES.map((league) => (
+                <LeagueTable
+                  key={league.id}
+                  league={league}
+                  students={distributed[league.id]}
+                  globalOffset={leagueOffsets[league.id]}
+                />
+              ))}
         </div>
       </div>
     </section>

@@ -4,64 +4,64 @@
 
 @layer base {
   :root {
-    /* Deep Blue & Gold Design System */
-    --background: 228 47% 7%;
-    --foreground: 210 40% 96%;
+    /* Light Education Theme */
+    --background: 220 30% 97%;
+    --foreground: 222 47% 11%;
 
-    --card: 228 40% 11%;
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 228 40% 11%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 43 96% 56%;
-    --primary-foreground: 228 47% 7%;
+    --primary: 43 96% 48%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 228 35% 18%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 220 20% 93%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 228 35% 15%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 220 20% 93%;
+    --muted-foreground: 220 15% 45%;
 
-    --accent: 43 96% 56%;
-    --accent-foreground: 228 47% 7%;
+    --accent: 220 20% 93%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 228 35% 20%;
-    --input: 228 35% 18%;
-    --ring: 43 96% 56%;
+    --border: 220 20% 88%;
+    --input: 220 20% 93%;
+    --ring: 43 96% 48%;
 
     --radius: 0.75rem;
 
     /* League colors */
-    --platinum: 186 100% 72%;
-    --platinum-foreground: 228 47% 7%;
-    --gold-league: 43 96% 56%;
-    --gold-league-foreground: 228 47% 7%;
-    --silver: 220 13% 69%;
-    --silver-foreground: 228 47% 7%;
-    --bronze: 25 75% 55%;
-    --bronze-foreground: 210 40% 96%;
+    --platinum: 200 80% 45%;
+    --platinum-foreground: 0 0% 100%;
+    --gold-league: 43 96% 48%;
+    --gold-league-foreground: 222 47% 11%;
+    --silver: 220 15% 50%;
+    --silver-foreground: 0 0% 100%;
+    --bronze: 25 75% 50%;
+    --bronze-foreground: 0 0% 100%;
 
     /* Rank colors */
-    --rank-1: 43 96% 56%;
-    --rank-2: 220 13% 75%;
-    --rank-3: 25 75% 55%;
+    --rank-1: 43 96% 48%;
+    --rank-2: 220 15% 55%;
+    --rank-3: 25 75% 50%;
 
-    /* Glass effect */
-    --glass-bg: 228 40% 14%;
-    --glass-border: 228 30% 25%;
+    /* Card surface */
+    --glass-bg: 0 0% 100%;
+    --glass-border: 220 20% 88%;
 
-    --sidebar-background: 228 47% 7%;
-    --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 43 96% 56%;
-    --sidebar-primary-foreground: 228 47% 7%;
-    --sidebar-accent: 228 35% 18%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 228 35% 20%;
-    --sidebar-ring: 43 96% 56%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 43 96% 48%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 220 20% 93%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 20% 88%;
+    --sidebar-ring: 43 96% 48%;
   }
 }
 
@@ -72,7 +72,7 @@
 
   body {
     @apply bg-background text-foreground;
-    background: linear-gradient(135deg, hsl(228, 47%, 5%) 0%, hsl(230, 50%, 9%) 50%, hsl(228, 45%, 7%) 100%);
+    background: linear-gradient(160deg, hsl(220, 40%, 97%) 0%, hsl(40, 30%, 96%) 50%, hsl(220, 35%, 95%) 100%);
     min-height: 100vh;
     font-family: 'Inter', system-ui, sans-serif;
   }
@@ -84,9 +84,9 @@
 
 @layer utilities {
   .glass-card {
-    background: hsl(var(--glass-bg) / 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--glass-border) / 0.6);
+    background: hsl(var(--glass-bg));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 2px 12px hsl(220, 30%, 85%, 0.5), 0 1px 3px hsl(220, 30%, 80%, 0.3);
   }
 
   .gold-text {
@@ -94,7 +94,7 @@
   }
 
   .gold-gradient {
-    background: linear-gradient(135deg, hsl(43, 96%, 56%), hsl(38, 100%, 60%));
+    background: linear-gradient(135deg, hsl(43, 96%, 42%), hsl(38, 100%, 50%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -113,19 +113,19 @@
   }
 
   .hero-gradient {
-    background: radial-gradient(ellipse at top center, hsl(228, 60%, 18%) 0%, transparent 70%);
+    background: radial-gradient(ellipse at top center, hsl(43, 96%, 48%, 0.08) 0%, transparent 70%);
   }
 
   .table-row-highlight {
-    background: hsl(var(--primary) / 0.06);
+    background: hsl(43, 96%, 48%, 0.05);
   }
 
   .glow-gold {
-    box-shadow: 0 0 20px hsl(43, 96%, 56%, 0.25), 0 4px 20px hsl(228, 47%, 5%, 0.4);
+    box-shadow: 0 0 16px hsl(43, 96%, 48%, 0.25), 0 4px 12px hsl(220, 30%, 80%, 0.4);
   }
 
   .glow-platinum {
-    box-shadow: 0 0 20px hsl(186, 100%, 72%, 0.2), 0 4px 20px hsl(228, 47%, 5%, 0.4);
+    box-shadow: 0 0 16px hsl(200, 80%, 45%, 0.2), 0 4px 12px hsl(220, 30%, 80%, 0.4);
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -139,7 +139,30 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.5);
+    background: hsl(var(--primary) / 0.4);
     border-radius: 2px;
+  }
+
+  /* League header gradients */
+  .league-platinum-bg {
+    background: linear-gradient(135deg, hsl(200, 80%, 95%) 0%, hsl(200, 60%, 98%) 100%);
+    border-left: 4px solid hsl(var(--platinum));
+  }
+  .league-gold-bg {
+    background: linear-gradient(135deg, hsl(43, 96%, 95%) 0%, hsl(43, 80%, 98%) 100%);
+    border-left: 4px solid hsl(var(--gold-league));
+  }
+  .league-silver-bg {
+    background: linear-gradient(135deg, hsl(220, 15%, 94%) 0%, hsl(220, 10%, 97%) 100%);
+    border-left: 4px solid hsl(var(--silver));
+  }
+  .league-bronze-bg {
+    background: linear-gradient(135deg, hsl(25, 75%, 95%) 0%, hsl(25, 60%, 98%) 100%);
+    border-left: 4px solid hsl(var(--bronze));
+  }
+
+  .section-badge {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-border text-muted-foreground text-sm font-medium mb-4;
+    box-shadow: 0 1px 4px hsl(220, 30%, 80%, 0.3);
   }
 }

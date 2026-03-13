@@ -33,7 +33,7 @@ function StudentResultCard({ student, rank }: { student: Student; rank: number }
               { label: 'Projects', value: student.projects_submitted, highlight: false },
               { label: 'Attended', value: student.attendance_count, highlight: false },
             ].map(({ label, value, highlight }) => (
-              <div key={label} className="text-center p-3 rounded-xl bg-card/50 border border-border/40">
+              <div key={label} className="text-center p-3 rounded-xl bg-secondary/60 border border-border/40">
                 <div className={`text-xl font-black ${highlight ? 'text-primary' : 'text-foreground'}`}>{value}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
               </div>
@@ -49,12 +49,11 @@ export default function SearchSection() {
   const [query, setQuery] = useState('');
   const { data: results, isLoading, isFetching } = useSearchStudents(query);
 
-  // To compute rank, we show position in the returned results (already sorted by cumulative score globally)
   return (
     <section id="search" className="py-16 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground text-sm font-medium mb-4">
+          <div className="section-badge">
             <Search className="w-4 h-4 text-primary" />
             Find a Student
           </div>
@@ -72,7 +71,7 @@ export default function SearchSection() {
               placeholder="Search by name or mobile number..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-12 h-14 text-base bg-secondary border-border focus-visible:ring-primary rounded-xl"
+              className="pl-12 h-14 text-base bg-white border-border focus-visible:ring-primary rounded-xl shadow-sm"
             />
             {(isLoading || isFetching) && (
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
