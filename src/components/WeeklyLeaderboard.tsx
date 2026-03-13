@@ -41,25 +41,38 @@ function computeEnrichedScores(
   scores: Array<{ id: string; marks: number; attendance: boolean; bonus: number; weekly_score: number; students?: { name: string; league: string } }>,
   weekNumber: number
 ) {
-  // Sort by weekly_score desc (already sorted from DB, but re-sort to be safe)
-  const sorted = [...scores].sort((a, b) => b.weekly_score - a.weekly_score);
-
   const winnerCount = weekNumber <= 11 ? 2 : 1;
-  const runnerUpEnd = winnerCount + 10; // next 10 after winners
+  const runnerUpEnd = winnerCount + 10;
+
+  // If project not submitted (bonus === 0), project eval score is also 0
+  const enriched = scores.map((score) => {
+    const projectSubmission = score.bonus > 0 ? 10 : 0;
+    const effectiveMarks = projectSubmission > 0 ? score.marks : 0;
+    const attendanceScore = score.attendance ? 20 : 0;
+    return { ...score, effectiveMarks, attendanceScore, projectSubmission };
+  });
+
+  // Re-sort by computed weekly score: effectiveMarks + attendanceScore + projectSubmission + winner + runnerUp
+  // We sort first without winner/runnerUp to determine ranks
+  const sorted = [...enriched].sort(
+    (a, b) =>
+      (b.effectiveMarks + b.attendanceScore + b.projectSubmission) -
+      (a.effectiveMarks + a.attendanceScore + a.projectSubmission)
+  );
 
   return sorted.map((score, idx) => {
     const rank = idx + 1;
-    const attendance = score.attendance ? 20 : 0;
-    const projectSubmission = score.bonus > 0 ? 10 : 0;
-    const winner = rank <= winnerCount ? 30 : 0;
-    const runnerUp = rank > winnerCount && rank <= runnerUpEnd ? 15 : 0;
+    const winnerBonus = rank <= winnerCount ? 30 : 0;
+    const runnerUpBonus = rank > winnerCount && rank <= runnerUpEnd ? 15 : 0;
+    const computedWeeklyScore =
+      score.effectiveMarks + score.attendanceScore + score.projectSubmission + winnerBonus + runnerUpBonus;
     return {
       ...score,
       rank,
-      attendanceScore: attendance,
-      projectSubmissionScore: projectSubmission,
-      winnerBonus: winner,
-      runnerUpBonus: runnerUp,
+      projectSubmissionScore: score.projectSubmission,
+      winnerBonus,
+      runnerUpBonus,
+      computed_weekly_score: computedWeeklyScore,
     };
   });
 }
