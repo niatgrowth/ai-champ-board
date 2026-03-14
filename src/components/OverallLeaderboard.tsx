@@ -38,37 +38,88 @@ function distributeLeagues(students: Student[]): {
 const LEAGUES = [
   {
     id: 'platinum' as const,
-    label: 'Platinum League',
+    label: 'PLATINUM LEAGUE',
     headerClass: 'league-platinum-bg',
     scoreColor: 'text-platinum',
-    percent: 'Top 10%',
-    dotColor: 'bg-blue-500',
+    laurelColor: 'text-blue-400',
+    titleColor: 'text-blue-700',
+    glowClass: 'hover:shadow-blue-100',
   },
   {
     id: 'gold' as const,
-    label: 'Gold League',
+    label: 'GOLD LEAGUE',
     headerClass: 'league-gold-bg',
     scoreColor: 'text-primary',
-    percent: 'Next 20%',
-    dotColor: 'bg-amber-400',
+    laurelColor: 'text-amber-400',
+    titleColor: 'text-amber-700',
+    glowClass: 'hover:shadow-amber-100',
   },
   {
     id: 'silver' as const,
-    label: 'Silver League',
+    label: 'SILVER LEAGUE',
     headerClass: 'league-silver-bg',
     scoreColor: 'text-silver',
-    percent: 'Next 30%',
-    dotColor: 'bg-slate-400',
+    laurelColor: 'text-slate-400',
+    titleColor: 'text-slate-600',
+    glowClass: 'hover:shadow-slate-100',
   },
   {
     id: 'bronze' as const,
-    label: 'Bronze League',
+    label: 'BRONZE LEAGUE',
     headerClass: 'league-bronze-bg',
     scoreColor: 'text-bronze',
-    percent: 'Remaining 40%',
-    dotColor: 'bg-amber-600',
+    laurelColor: 'text-amber-600',
+    titleColor: 'text-amber-800',
+    glowClass: 'hover:shadow-orange-100',
   },
 ];
+
+function LaurelLeft({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 36" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.85">
+        {/* Main branch stem */}
+        <path d="M54 18 Q40 16 26 20 Q14 24 6 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        {/* Leaves along the branch */}
+        <ellipse cx="46" cy="12" rx="7" ry="3.5" transform="rotate(-25 46 12)" fill="currentColor" opacity="0.7"/>
+        <ellipse cx="38" cy="9" rx="6.5" ry="3" transform="rotate(-35 38 9)" fill="currentColor" opacity="0.65"/>
+        <ellipse cx="30" cy="8" rx="6" ry="3" transform="rotate(-20 30 8)" fill="currentColor" opacity="0.6"/>
+        <ellipse cx="22" cy="10" rx="5.5" ry="2.5" transform="rotate(-10 22 10)" fill="currentColor" opacity="0.55"/>
+        <ellipse cx="15" cy="14" rx="5" ry="2.5" transform="rotate(5 15 14)" fill="currentColor" opacity="0.5"/>
+        <ellipse cx="44" cy="24" rx="6.5" ry="3" transform="rotate(20 44 24)" fill="currentColor" opacity="0.65"/>
+        <ellipse cx="36" cy="27" rx="6" ry="2.8" transform="rotate(30 36 27)" fill="currentColor" opacity="0.6"/>
+        <ellipse cx="28" cy="28" rx="5.5" ry="2.5" transform="rotate(15 28 28)" fill="currentColor" opacity="0.55"/>
+        <ellipse cx="20" cy="26" rx="5" ry="2.3" transform="rotate(5 20 26)" fill="currentColor" opacity="0.5"/>
+        {/* Berries */}
+        <circle cx="10" cy="18" r="2.2" fill="currentColor" opacity="0.8"/>
+        <circle cx="7" cy="16" r="1.5" fill="currentColor" opacity="0.6"/>
+        <circle cx="7" cy="20" r="1.5" fill="currentColor" opacity="0.6"/>
+      </g>
+    </svg>
+  );
+}
+
+function LaurelRight({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 36" className={className} fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'scaleX(-1)' }}>
+      <g opacity="0.85">
+        <path d="M54 18 Q40 16 26 20 Q14 24 6 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        <ellipse cx="46" cy="12" rx="7" ry="3.5" transform="rotate(-25 46 12)" fill="currentColor" opacity="0.7"/>
+        <ellipse cx="38" cy="9" rx="6.5" ry="3" transform="rotate(-35 38 9)" fill="currentColor" opacity="0.65"/>
+        <ellipse cx="30" cy="8" rx="6" ry="3" transform="rotate(-20 30 8)" fill="currentColor" opacity="0.6"/>
+        <ellipse cx="22" cy="10" rx="5.5" ry="2.5" transform="rotate(-10 22 10)" fill="currentColor" opacity="0.55"/>
+        <ellipse cx="15" cy="14" rx="5" ry="2.5" transform="rotate(5 15 14)" fill="currentColor" opacity="0.5"/>
+        <ellipse cx="44" cy="24" rx="6.5" ry="3" transform="rotate(20 44 24)" fill="currentColor" opacity="0.65"/>
+        <ellipse cx="36" cy="27" rx="6" ry="2.8" transform="rotate(30 36 27)" fill="currentColor" opacity="0.6"/>
+        <ellipse cx="28" cy="28" rx="5.5" ry="2.5" transform="rotate(15 28 28)" fill="currentColor" opacity="0.55"/>
+        <ellipse cx="20" cy="26" rx="5" ry="2.3" transform="rotate(5 20 26)" fill="currentColor" opacity="0.5"/>
+        <circle cx="10" cy="18" r="2.2" fill="currentColor" opacity="0.8"/>
+        <circle cx="7" cy="16" r="1.5" fill="currentColor" opacity="0.6"/>
+        <circle cx="7" cy="20" r="1.5" fill="currentColor" opacity="0.6"/>
+      </g>
+    </svg>
+  );
+}
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1)
@@ -108,21 +159,29 @@ function LeagueTable({
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">
-      {/* Header */}
+    <div className={`glass-card rounded-2xl overflow-hidden animate-fade-in shadow-md transition-shadow hover:shadow-lg ${league.glowClass}`}>
+      {/* Header with laurel wreath design */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center justify-between p-5 ${league.headerClass} hover:opacity-90 transition-opacity`}
+        className={`w-full p-5 ${league.headerClass} hover:opacity-90 transition-opacity`}
       >
-        <div className="flex items-center gap-3">
-          <div className={`w-3 h-3 rounded-full ${league.dotColor}`} />
-          <span className="text-lg font-bold text-foreground">{league.label}</span>
+        <div className="flex items-center justify-between w-full">
+          {/* Laurel title centered */}
+          <div className="flex-1 flex items-center justify-center gap-2">
+            <LaurelLeft className={`w-14 h-9 ${league.laurelColor} shrink-0`} />
+            <span className={`text-base font-black tracking-[0.18em] ${league.titleColor} select-none`}>
+              {league.label}
+            </span>
+            <LaurelRight className={`w-14 h-9 ${league.laurelColor} shrink-0`} />
+          </div>
+          <div className="ml-3 shrink-0">
+            {expanded ? (
+              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            )}
+          </div>
         </div>
-        {expanded ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        )}
       </button>
 
       {expanded && (
@@ -133,16 +192,16 @@ function LeagueTable({
                 <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
                 <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
                 <TableHead className="text-muted-foreground text-right font-semibold">
-                  Cumulative Score
+                  Total Points
                 </TableHead>
                 <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">
-                  Best Weekly
+                  Best Weekly Score
                 </TableHead>
                 <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">
-                  Projects
+                  Projects Built
                 </TableHead>
                 <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">
-                  Attendance
+                  Sessions Attended
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -150,9 +209,10 @@ function LeagueTable({
               {students.map((student, idx) => (
                 <TableRow
                   key={student.id}
-                  className={`border-border/30 transition-colors hover:bg-secondary/40 ${
-                    idx < 3 ? 'table-row-highlight' : ''
-                  }`}
+                  className={`border-border/30 transition-all duration-200 cursor-default
+                    hover:bg-secondary/50 hover:shadow-sm hover:scale-[1.002]
+                    ${idx < 3 ? 'table-row-highlight' : ''}
+                  `}
                 >
                   <TableCell>
                     <RankBadge rank={globalOffset + idx + 1} />
@@ -214,11 +274,12 @@ export default function OverallLeaderboard() {
             <Trophy className="w-4 h-4 text-primary" />
             Overall Rankings
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            League <span className="gold-gradient">Leaderboard</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+            AI Bootcamp <span className="gold-gradient">Champions Board</span>
           </h2>
-          <p className="text-muted-foreground">
-            Dynamic league distribution based on total participants
+          <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            Track the top builders, creators, and innovators of AI bootcamp.<br />
+            Earn points through projects, attendance, and weekly challenges to climb the leagues.
           </p>
         </div>
 
