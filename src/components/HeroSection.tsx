@@ -17,7 +17,7 @@ export default function HeroSection() {
 
   const stats = [
     {
-      label: 'Total Students',
+      label: 'Total Active Participants',
       value: totalStudents ?? settings?.total_students ?? '—',
       icon: Users,
       color: 'text-platinum',
