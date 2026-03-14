@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Menu, X, Crown, Trophy, CalendarDays, Search, Home } from 'lucide-react';
+import niatLogo from '@/assets/niat-logo.png';
 
 const NAV_LINKS = [
   { href: 'https://www.niatindia.com/ai-bootcamp', label: 'Home', icon: Home, external: true },
@@ -16,13 +17,8 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-white/90 backdrop-blur-md shadow-sm">
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <a href="#home" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md glow-gold">
-            <span className="text-primary-foreground font-black text-xs">N</span>
-          </div>
-          <span className="font-bold text-foreground group-hover:text-primary transition-colors text-sm">
-            AI Bootcamp
-          </span>
+        <a href="#home" className="flex items-center group">
+          <img src={niatLogo} alt="NIAT Logo" className="h-10 w-auto object-contain" />
         </a>
 
         {/* Desktop nav */}

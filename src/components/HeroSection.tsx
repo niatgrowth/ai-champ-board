@@ -17,7 +17,7 @@ export default function HeroSection() {
 
   const stats = [
     {
-      label: 'Total Students',
+      label: 'Total Active Participants',
       value: totalStudents ?? settings?.total_students ?? '—',
       icon: Users,
       color: 'text-platinum',
@@ -51,10 +51,10 @@ export default function HeroSection() {
 
           <h1 className="text-4xl md:text-6xl font-black text-foreground mb-4 leading-tight">
             Track the{' '}
-            <span className="gold-gradient">Top Innovators</span>
+            <span className="gold-gradient">Top Student Innovators</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Building AI projects every week. Live rankings, weekly scores, and league standings.
+            Compete, build, and climb the leaderboard as you complete AI challenges every week.
           </p>
         </div>
 
