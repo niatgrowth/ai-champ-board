@@ -115,9 +115,13 @@ export default function ChampionsSection() {
 
                   {/* Podium step */}
                   <div
-                    className={`w-full rounded-b-xl ${config.podiumHeight} ${config.podiumBg} flex items-center justify-center`}
+                    className={`w-full rounded-b-xl ${config.podiumHeight} ${config.podiumBg} flex items-center justify-center relative overflow-hidden`}
                   >
-                    <span className="text-white font-black text-2xl opacity-70">#{config.rank}</span>
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-16 h-16 rounded-full bg-white/20 blur-xl" />
+                    </div>
+                    <span className="relative text-white font-black text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">{config.rank}</span>
                   </div>
                 </div>
               );
