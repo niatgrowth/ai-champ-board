@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Menu, X, Crown, Trophy, CalendarDays, Search, Home } from 'lucide-react';
+import niatLogo from '@/assets/niat-logo.png';
 
 const NAV_LINKS = [
   { href: 'https://www.niatindia.com/ai-bootcamp', label: 'Home', icon: Home, external: true },

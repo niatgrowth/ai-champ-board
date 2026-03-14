@@ -67,9 +67,9 @@ export default function ChampionsSection() {
             AI Champions
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Top <span className="gold-gradient">3 Champions</span>
+            Top <span className="gold-gradient">3 AI Champions</span>
           </h2>
-          <p className="text-muted-foreground">The highest-performing innovators this season</p>
+          <p className="text-muted-foreground">These highest-ranked students are those who consistently build, innovate, and perform.</p>
         </div>
 
         {isLoading ? (
