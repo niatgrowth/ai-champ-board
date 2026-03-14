@@ -76,18 +76,62 @@ export function useSettings() {
   });
 }
 
+/** Distribute students into leagues exactly as OverallLeaderboard does */
+function distributeLeaguesForRank(students: Student[]): Map<string, { student: Student; globalRank: number; leagueRank: number; league: string }> {
+  const sorted = [...students].sort((a, b) => b.cumulative_score - a.cumulative_score);
+  const total = sorted.length;
+  const platCount = Math.max(1, Math.round(total * 0.10));
+  const goldCount = Math.max(1, Math.round(total * 0.20));
+  const silverCount = Math.max(1, Math.round(total * 0.30));
+
+  const slices: [string, Student[]][] = [
+    ['platinum', sorted.slice(0, platCount)],
+    ['gold', sorted.slice(platCount, platCount + goldCount)],
+    ['silver', sorted.slice(platCount + goldCount, platCount + goldCount + silverCount)],
+    ['bronze', sorted.slice(platCount + goldCount + silverCount)],
+  ];
+
+  const map = new Map<string, { student: Student; globalRank: number; leagueRank: number; league: string }>();
+  let globalRank = 0;
+  for (const [league, group] of slices) {
+    group.forEach((s, i) => {
+      globalRank++;
+      map.set(s.id, { student: s, globalRank, leagueRank: i + 1, league });
+    });
+  }
+  return map;
+}
+
 export function useSearchStudents(query: string) {
   return useQuery({
     queryKey: ['search', query],
     queryFn: async () => {
       if (!query.trim()) return [];
-      const { data, error } = await supabase
+
+      // Fetch ALL students to compute correct global ranks
+      const { data: allStudents, error: allError } = await supabase
         .from('students')
         .select('*')
-        .or(`name.ilike.%${query}%,mobile.ilike.%${query}%`)
         .order('cumulative_score', { ascending: false });
-      if (error) throw error;
-      return data as Student[];
+      if (allError) throw allError;
+
+      const rankMap = distributeLeaguesForRank((allStudents ?? []) as Student[]);
+
+      // Filter matching students
+      const q = query.toLowerCase();
+      const matched = ((allStudents ?? []) as Student[]).filter(
+        (s) => s.name.toLowerCase().includes(q) || (s.mobile ?? '').includes(q)
+      );
+
+      return matched.map((s) => {
+        const info = rankMap.get(s.id);
+        return {
+          ...s,
+          globalRank: info?.globalRank ?? 0,
+          leagueRank: info?.leagueRank ?? 0,
+          assignedLeague: info?.league ?? s.league,
+        };
+      });
     },
     enabled: query.trim().length >= 2,
   });
