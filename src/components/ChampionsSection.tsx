@@ -59,7 +59,7 @@ export default function ChampionsSection() {
   ];
 
   return (
-    <section id="champions" className="py-16 px-4">
+    <section id="champions" className="pt-28 pb-16 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12 animate-fade-in">
           <div className="section-badge">
