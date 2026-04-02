@@ -172,7 +172,7 @@ export default function WeeklyLeaderboard() {
               </Select>
             </div>
 
-            <div className="overflow-x-auto scrollbar-thin">
+            <div className="overflow-x-auto overflow-y-auto max-h-96 scrollbar-thin">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
