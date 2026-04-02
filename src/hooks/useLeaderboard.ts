@@ -102,6 +102,70 @@ function distributeLeaguesForRank(students: Student[]): Map<string, { student: S
   return map;
 }
 
+export function useMonthlyScores(weeks: number[]) {
+  return useQuery({
+    queryKey: ['monthly_scores', weeks],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('weekly_scores')
+        .select('*, students(name)')
+        .in('week_number', weeks);
+      if (error) throw error;
+
+      // Aggregate per student
+      const map = new Map<string, {
+        studentId: string;
+        name: string;
+        monthlyScore: number;
+        bestWeeklyScore: number;
+        projectsSubmitted: number;
+        attendanceCount: number;
+        bonusCount: number;
+      }>();
+
+      for (const row of data ?? []) {
+        const sid = row.student_id;
+        const name = (row as any).students?.name ?? 'Unknown';
+        const existing = map.get(sid);
+        const ws = row.weekly_score;
+        const proj = row.bonus > 0 ? 1 : 0;
+        const att = row.attendance ? 1 : 0;
+        // bonus count = winner or runner-up appearances
+        const bonusAppearance = (row.weekly_score - (row.bonus > 0 ? row.marks : 0) - (row.attendance ? 20 : 0) - (row.bonus > 0 ? 10 : 0)) > 0 ? 1 : 0;
+
+        if (existing) {
+          existing.monthlyScore += ws;
+          existing.bestWeeklyScore = Math.max(existing.bestWeeklyScore, ws);
+          existing.projectsSubmitted += proj;
+          existing.attendanceCount += att;
+          existing.bonusCount += bonusAppearance;
+        } else {
+          map.set(sid, {
+            studentId: sid,
+            name,
+            monthlyScore: ws,
+            bestWeeklyScore: ws,
+            projectsSubmitted: proj,
+            attendanceCount: att,
+            bonusCount: bonusAppearance,
+          });
+        }
+      }
+
+      // Sort with tie-breakers
+      const results = Array.from(map.values()).sort((a, b) => {
+        if (b.monthlyScore !== a.monthlyScore) return b.monthlyScore - a.monthlyScore;
+        if (b.bestWeeklyScore !== a.bestWeeklyScore) return b.bestWeeklyScore - a.bestWeeklyScore;
+        if (b.projectsSubmitted !== a.projectsSubmitted) return b.projectsSubmitted - a.projectsSubmitted;
+        if (b.attendanceCount !== a.attendanceCount) return b.attendanceCount - a.attendanceCount;
+        return b.bonusCount - a.bonusCount;
+      });
+
+      return results;
+    },
+  });
+}
+
 export function useSearchStudents(query: string) {
   return useQuery({
     queryKey: ['search', query],
