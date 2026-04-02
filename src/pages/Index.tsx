@@ -2,6 +2,7 @@ import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import ChampionsSection from '@/components/ChampionsSection';
 import OverallLeaderboard from '@/components/OverallLeaderboard';
+import MonthlyLeaderboard from '@/components/MonthlyLeaderboard';
 import WeeklyLeaderboard from '@/components/WeeklyLeaderboard';
 import SearchSection from '@/components/SearchSection';
 
@@ -13,6 +14,7 @@ export default function Index() {
         
         <ChampionsSection />
         <OverallLeaderboard />
+        <MonthlyLeaderboard />
         <WeeklyLeaderboard />
         <SearchSection />
       </main>
