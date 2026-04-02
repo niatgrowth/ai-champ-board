@@ -59,7 +59,7 @@ export default function MonthlyLeaderboard() {
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Monthly <span className="gold-gradient">Leaderboard</span>
           </h2>
-          <p className="text-muted-foreground">Aggregated performance across weeks in each month</p>
+          <p className="text-muted-foreground">See how your weekly efforts add up to your monthly ranking.</p>
         </div>
 
         <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">

@@ -125,7 +125,7 @@ export default function WeeklyLeaderboard() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Weekly <span className="gold-gradient">Leaderboard</span>
             </h2>
-            <p className="text-muted-foreground">Performance scores updated each week</p>
+            <p className="text-muted-foreground">Track your weekly score, performance, and progress in real-time.</p>
           </div>
 
           <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">
