@@ -155,12 +155,11 @@ function StudentResultCard({ student }: { student: SearchResult }) {
         </div>
 
         {/* Performance metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-3 mb-5">
           {[
             { label: 'Total Points', value: student.cumulative_score, highlight: true },
             { label: 'Best Weekly Score', value: student.best_weekly_score, highlight: false },
             { label: 'Projects Built', value: student.projects_submitted, highlight: false },
-            { label: 'Sessions Attended', value: student.attendance_count, highlight: false },
           ].map(({ label, value, highlight }) => (
             <div key={label} className="text-center p-3 rounded-xl bg-secondary/60 border border-border/40">
               <div className={`text-xl font-black ${highlight ? cfg.scoreColor : 'text-foreground'}`}>{value}</div>
@@ -173,7 +172,7 @@ function StudentResultCard({ student }: { student: SearchResult }) {
         <div className={`flex items-start gap-2.5 px-4 py-3 rounded-xl ${cfg.badgeBg} border ${cfg.badgeBorder}`}>
           <Sparkles className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.scoreColor}`} />
           <p className={`text-xs leading-relaxed ${cfg.titleColor}`}>
-            Keep building AI projects and attending sessions to climb the leaderboard and reach the next league.
+            Keep building AI projects and winning weekly challenges to climb the leaderboard and reach the next league.
           </p>
         </div>
       </div>

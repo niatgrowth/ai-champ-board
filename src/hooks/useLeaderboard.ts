@@ -119,7 +119,6 @@ export function useMonthlyScores(weeks: number[]) {
         monthlyScore: number;
         bestWeeklyScore: number;
         projectsSubmitted: number;
-        attendanceCount: number;
         bonusCount: number;
       }>();
 
@@ -129,15 +128,14 @@ export function useMonthlyScores(weeks: number[]) {
         const existing = map.get(sid);
         const ws = row.weekly_score;
         const proj = row.bonus > 0 ? 1 : 0;
-        const att = row.attendance ? 1 : 0;
-        // bonus count = winner or runner-up appearances
-        const bonusAppearance = (row.weekly_score - (row.bonus > 0 ? row.marks : 0) - (row.attendance ? 20 : 0) - (row.bonus > 0 ? 10 : 0)) > 0 ? 1 : 0;
+        // bonus appearance = received winner (+20) or runner-up (+10) bonus
+        const baseMarks = row.bonus > 0 ? row.marks : 0;
+        const bonusAppearance = ws - baseMarks > 0 ? 1 : 0;
 
         if (existing) {
           existing.monthlyScore += ws;
           existing.bestWeeklyScore = Math.max(existing.bestWeeklyScore, ws);
           existing.projectsSubmitted += proj;
-          existing.attendanceCount += att;
           existing.bonusCount += bonusAppearance;
         } else {
           map.set(sid, {
@@ -146,7 +144,6 @@ export function useMonthlyScores(weeks: number[]) {
             monthlyScore: ws,
             bestWeeklyScore: ws,
             projectsSubmitted: proj,
-            attendanceCount: att,
             bonusCount: bonusAppearance,
           });
         }
@@ -157,7 +154,6 @@ export function useMonthlyScores(weeks: number[]) {
         if (b.monthlyScore !== a.monthlyScore) return b.monthlyScore - a.monthlyScore;
         if (b.bestWeeklyScore !== a.bestWeeklyScore) return b.bestWeeklyScore - a.bestWeeklyScore;
         if (b.projectsSubmitted !== a.projectsSubmitted) return b.projectsSubmitted - a.projectsSubmitted;
-        if (b.attendanceCount !== a.attendanceCount) return b.attendanceCount - a.attendanceCount;
         return b.bonusCount - a.bonusCount;
       });
 

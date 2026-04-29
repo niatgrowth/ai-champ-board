@@ -107,7 +107,6 @@ export default function MonthlyLeaderboard() {
                   <TableHead className="text-muted-foreground text-right font-semibold">Monthly Score</TableHead>
                   <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Best Week</TableHead>
                   <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Projects</TableHead>
-                  <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">Attendance</TableHead>
                   <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">Bonus Count</TableHead>
                 </TableRow>
               </TableHeader>
@@ -120,7 +119,6 @@ export default function MonthlyLeaderboard() {
                         <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
                         <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                         <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                         <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                       </TableRow>
                     ))
@@ -148,9 +146,6 @@ export default function MonthlyLeaderboard() {
                         </TableCell>
                         <TableCell className="text-right hidden sm:table-cell">
                           <span className="font-semibold text-foreground">{s.projectsSubmitted}</span>
-                        </TableCell>
-                        <TableCell className="text-right hidden md:table-cell">
-                          <span className="font-semibold text-foreground">{s.attendanceCount}</span>
                         </TableCell>
                         <TableCell className="text-right hidden md:table-cell">
                           <span className="font-semibold text-foreground">{s.bonusCount}</span>

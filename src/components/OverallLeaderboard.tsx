@@ -200,9 +200,6 @@ function LeagueTable({
                 <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">
                   Projects Built
                 </TableHead>
-                <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">
-                  Sessions Attended
-                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -235,9 +232,6 @@ function LeagueTable({
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground hidden md:table-cell">
                     {student.projects_submitted}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground hidden md:table-cell">
-                    {student.attendance_count}
                   </TableCell>
                 </TableRow>
               ))}
@@ -279,7 +273,7 @@ export default function OverallLeaderboard() {
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Track the top builders, creators, and innovators of AI bootcamp.<br />
-            Earn points through projects, attendance, and weekly challenges to climb the leagues.
+            Earn points through projects and weekly challenges to climb the leagues.
           </p>
         </div>
 
