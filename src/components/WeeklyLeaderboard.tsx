@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarDays, CheckCircle, XCircle, Info } from 'lucide-react';
+import { CalendarDays, Info } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -28,14 +28,12 @@ import { getInitials } from '@/lib/leaderboard-utils';
 const ALL_WEEKS = Array.from({ length: 16 }, (_, i) => i + 1);
 
 /**
- * Scoring rules:
- * - marks: out of 40
- * - attendance: +20 if attended, +0 if not
- * - project submission: +10 if submitted (bonus > 0), +0 if not
- * - winner:
- *     Weeks 1–11 → Top 2 get +30
- *     Weeks 12–16 → Top 1 gets +30
- * - runner-up: top 10 students after winner positions get +15
+ * Scoring rules (Max = 100):
+ * - Project Score: out of 80 (0 if not submitted)
+ * - Winner:
+ *     Weeks 1–11 → Top 2 get +20
+ *     Weeks 12–16 → Top 1 gets +20
+ * - Runner-up: next 10 after winners get +10
  */
 function computeEnrichedScores(
   scores: Array<{ id: string; marks: number; attendance: boolean; bonus: number; weekly_score: number; students?: { name: string; league: string } }>,
@@ -44,32 +42,24 @@ function computeEnrichedScores(
   const winnerCount = weekNumber <= 11 ? 2 : 1;
   const runnerUpEnd = winnerCount + 10;
 
-  // If project not submitted (bonus === 0), project eval score is also 0
+  // If project not submitted (bonus === 0), project eval score is 0
   const enriched = scores.map((score) => {
-    const projectSubmission = score.bonus > 0 ? 10 : 0;
-    const effectiveMarks = projectSubmission > 0 ? score.marks : 0;
-    const attendanceScore = score.attendance ? 20 : 0;
-    return { ...score, effectiveMarks, attendanceScore, projectSubmission };
+    const projectSubmitted = score.bonus > 0;
+    const effectiveMarks = projectSubmitted ? Math.min(score.marks, 80) : 0;
+    return { ...score, effectiveMarks };
   });
 
-  // Re-sort by computed weekly score: effectiveMarks + attendanceScore + projectSubmission + winner + runnerUp
-  // We sort first without winner/runnerUp to determine ranks
-  const sorted = [...enriched].sort(
-    (a, b) =>
-      (b.effectiveMarks + b.attendanceScore + b.projectSubmission) -
-      (a.effectiveMarks + a.attendanceScore + a.projectSubmission)
-  );
+  // Sort by base project score to determine winners/runner-ups
+  const sorted = [...enriched].sort((a, b) => b.effectiveMarks - a.effectiveMarks);
 
   return sorted.map((score, idx) => {
     const rank = idx + 1;
-    const winnerBonus = rank <= winnerCount ? 30 : 0;
-    const runnerUpBonus = rank > winnerCount && rank <= runnerUpEnd ? 15 : 0;
-    const computedWeeklyScore =
-      score.effectiveMarks + score.attendanceScore + score.projectSubmission + winnerBonus + runnerUpBonus;
+    const winnerBonus = rank <= winnerCount ? 20 : 0;
+    const runnerUpBonus = rank > winnerCount && rank <= runnerUpEnd ? 10 : 0;
+    const computedWeeklyScore = score.effectiveMarks + winnerBonus + runnerUpBonus;
     return {
       ...score,
       rank,
-      projectSubmissionScore: score.projectSubmission,
       winnerBonus,
       runnerUpBonus,
       computed_weekly_score: computedWeeklyScore,
@@ -145,11 +135,9 @@ export default function WeeklyLeaderboard() {
                   <TooltipContent side="bottom" className="max-w-[260px] text-xs leading-relaxed p-3">
                     <p className="font-semibold mb-1.5 text-foreground">Weekly Score =</p>
                     <ul className="space-y-1 text-muted-foreground">
-                      <li>📝 Project Score (/40)</li>
-                      <li>✅ Attendance: <span className="text-foreground font-medium">+20</span></li>
-                      <li>📦 Project Submission: <span className="text-foreground font-medium">+10</span></li>
-                      <li>🏆 Winner (Wk 1–11 top 2, Wk 12–16 top 1): <span className="text-foreground font-medium">+30</span></li>
-                      <li>🥈 Runner Up (next 10): <span className="text-foreground font-medium">+15</span></li>
+                      <li>📝 Project Score (/80)</li>
+                      <li>🏆 Winner (Wk 1–11 top 2, Wk 12–16 top 1): <span className="text-foreground font-medium">+20</span></li>
+                      <li>🥈 Runner Up (next 10): <span className="text-foreground font-medium">+10</span></li>
                     </ul>
                     <p className="mt-1.5 text-foreground font-medium">Max = 100</p>
                   </TooltipContent>
@@ -178,9 +166,7 @@ export default function WeeklyLeaderboard() {
                   <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
                     <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
                     <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
-                    <TableHead className="text-muted-foreground text-right font-semibold">Score (/40)</TableHead>
-                    <TableHead className="text-muted-foreground text-center hidden sm:table-cell font-semibold">Session Attendance</TableHead>
-                    <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Project Submission</TableHead>
+                    <TableHead className="text-muted-foreground text-right font-semibold">Score (/80)</TableHead>
                     <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">Winner</TableHead>
                     <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">Runner Up</TableHead>
                     <TableHead className="text-muted-foreground text-right font-semibold">Weekly Score</TableHead>
@@ -193,8 +179,6 @@ export default function WeeklyLeaderboard() {
                           <TableCell><Skeleton className="h-5 w-7" /></TableCell>
                           <TableCell><Skeleton className="h-5 w-36" /></TableCell>
                           <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
-                          <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
-                          <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                           <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                           <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                           <TableCell><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
@@ -220,34 +204,16 @@ export default function WeeklyLeaderboard() {
                           </TableCell>
                           <TableCell className="text-right">
                             <span className="font-semibold text-foreground">{score.effectiveMarks}</span>
-                            <span className="text-muted-foreground text-xs">/40</span>
-                          </TableCell>
-                          <TableCell className="text-center hidden sm:table-cell">
-                            {score.attendance ? (
-                              <div className="flex items-center justify-center gap-1">
-                                <CheckCircle className="w-4 h-4 text-emerald-500" />
-                                <span className="text-xs text-emerald-600 font-medium">+20</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center gap-1">
-                                <XCircle className="w-4 h-4 text-red-400" />
-                                <span className="text-xs text-muted-foreground">+0</span>
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right hidden sm:table-cell">
-                            <span className={`text-sm font-semibold ${score.projectSubmissionScore > 0 ? 'text-blue-600' : 'text-muted-foreground'}`}>
-                              {score.projectSubmissionScore > 0 ? '+10' : '0'}
-                            </span>
+                            <span className="text-muted-foreground text-xs">/80</span>
                           </TableCell>
                           <TableCell className="text-right hidden md:table-cell">
                             <span className={`text-sm font-bold ${score.winnerBonus > 0 ? 'text-yellow-600' : 'text-muted-foreground'}`}>
-                              {score.winnerBonus > 0 ? '+30' : '0'}
+                              {score.winnerBonus > 0 ? '+20' : '0'}
                             </span>
                           </TableCell>
                           <TableCell className="text-right hidden md:table-cell">
                             <span className={`text-sm font-semibold ${score.runnerUpBonus > 0 ? 'text-slate-600' : 'text-muted-foreground'}`}>
-                              {score.runnerUpBonus > 0 ? '+15' : '0'}
+                              {score.runnerUpBonus > 0 ? '+10' : '0'}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
