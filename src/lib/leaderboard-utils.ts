@@ -1,4 +1,55 @@
-import { type League } from '@/lib/supabase';
+import type { Student } from '@/lib/sheets';
+
+export type League = 'platinum' | 'gold' | 'silver' | 'bronze' | 'none';
+
+export interface RankedStudent extends Student {
+  rank: number;
+  league: League;
+}
+
+/**
+ * Assign leagues by percentile:
+ *  - Top 10% → Platinum
+ *  - 11–30% → Gold
+ *  - 31–60% → Silver
+ *  - 61–100% → Bronze (rest)
+ *
+ * Per spec: top 10% Platinum, next 20% Gold, next 30% Silver, next 40% Bronze.
+ */
+export function assignLeagues(students: Student[]): RankedStudent[] {
+  const sorted = [...students].sort((a, b) => b.totalScore - a.totalScore);
+  const total = sorted.length;
+  if (total === 0) return [];
+
+  const platCount = Math.max(1, Math.round(total * 0.1));
+  const goldCount = Math.max(1, Math.round(total * 0.2));
+  const silverCount = Math.max(1, Math.round(total * 0.3));
+
+  return sorted.map((s, i) => {
+    let league: League;
+    if (i < platCount) league = 'platinum';
+    else if (i < platCount + goldCount) league = 'gold';
+    else if (i < platCount + goldCount + silverCount) league = 'silver';
+    else league = 'bronze';
+    return { ...s, rank: i + 1, league };
+  });
+}
+
+export function getMonthWeeks(monthNumber: number): number[] {
+  return Array.from({ length: 4 }, (_, i) => (monthNumber - 1) * 4 + i + 1);
+}
+
+export function getMonthFromWeek(weekNumber: number): number {
+  return Math.ceil(weekNumber / 4);
+}
+
+export function getAvailableMonths(availableWeeks: number[]): number[] {
+  const months = new Set<number>();
+  for (const w of availableWeeks) months.add(getMonthFromWeek(w));
+  return Array.from(months).sort((a, b) => a - b);
+}
+
+// ── UI helpers (kept from previous version; used by components) ──────────────
 
 export function getLeagueColor(league: League | string) {
   const colors: Record<string, string> = {
@@ -38,8 +89,10 @@ export function getRankColor(rank: number) {
 }
 
 export function getInitials(name: string) {
+  if (!name) return '??';
   return name
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
