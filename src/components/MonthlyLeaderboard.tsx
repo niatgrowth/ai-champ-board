@@ -126,6 +126,8 @@ export default function MonthlyLeaderboard() {
                 <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
                   <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
                   <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
+                  <TableHead className="text-muted-foreground text-center font-semibold">Winner Up</TableHead>
+                  <TableHead className="text-muted-foreground text-center font-semibold">Runner Up</TableHead>
                   <TableHead className="text-muted-foreground text-right font-semibold">Monthly Score</TableHead>
                   <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Best Week</TableHead>
                   <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Weeks</TableHead>
@@ -137,6 +139,8 @@ export default function MonthlyLeaderboard() {
                       <TableRow key={i} className="border-border/20">
                         <TableCell><Skeleton className="h-5 w-7" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
                         <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                         <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
@@ -157,6 +161,12 @@ export default function MonthlyLeaderboard() {
                             </div>
                             <span className="font-medium text-foreground text-sm">{s.name}</span>
                           </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-muted-foreground text-sm font-medium">{s.monthWinnerUp}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-muted-foreground text-sm font-medium">{s.monthRunnerUp}</span>
                         </TableCell>
                         <TableCell className="text-right">
                           <span className="font-bold text-primary text-base">{s.monthScore}</span>

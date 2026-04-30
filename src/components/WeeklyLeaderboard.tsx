@@ -102,7 +102,10 @@ export default function WeeklyLeaderboard() {
                 <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
                   <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
                   <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
-                  <TableHead className="text-muted-foreground text-right font-semibold">Score (/80)</TableHead>
+                  <TableHead className="text-muted-foreground text-center font-semibold">Score</TableHead>
+                  <TableHead className="text-muted-foreground text-center font-semibold">Winner Up</TableHead>
+                  <TableHead className="text-muted-foreground text-center font-semibold">Runner Up</TableHead>
+                  <TableHead className="text-muted-foreground text-right font-semibold">Final Score</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -111,6 +114,9 @@ export default function WeeklyLeaderboard() {
                       <TableRow key={i} className="border-border/20">
                         <TableCell><Skeleton className="h-5 w-7" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
                       </TableRow>
                     ))
@@ -132,9 +138,17 @@ export default function WeeklyLeaderboard() {
                             </span>
                           </div>
                         </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-muted-foreground text-sm font-medium">{score.score}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-muted-foreground text-sm font-medium">{score.winnerUp}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-muted-foreground text-sm font-medium">{score.runnerUp}</span>
+                        </TableCell>
                         <TableCell className="text-right">
-                          <span className="font-bold text-primary text-base">{score.score}</span>
-                          <span className="text-muted-foreground text-xs">/80</span>
+                          <span className="font-bold text-primary text-base">{score.finalScore}</span>
                         </TableCell>
                       </TableRow>
                     ))}

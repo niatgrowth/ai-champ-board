@@ -6,16 +6,23 @@ const BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
 export interface StudentRow {
   name: string;
-  mobile: string; // normalized: last 10 digits, digits only
-  score: number; // (Out of 80)
+  mobile: string;
+  score: number; // Raw score/Total_score
+  finalScore: number; // The score used for rankings
+  winnerUp: number;
+  runnerUp: number;
   weekNumber: number;
 }
 
 export interface Student {
   mobile: string;
   name: string;
-  totalScore: number;
+  totalScore: number; // This will now represent sum of final_score
+  totalWinnerUp: number;
+  totalRunnerUp: number;
   weeklyScores: Record<number, number>;
+  weeklyWinnerUp: Record<number, number>;
+  weeklyRunnerUp: Record<number, number>;
 }
 
 function assertConfig() {
@@ -47,7 +54,7 @@ export async function fetchAllSheetNames(): Promise<
   const out: Array<{ sheetName: string; weekNumber: number }> = [];
   for (const s of sheets) {
     const title = s.properties?.title ?? '';
-    const m = /^week-(\d+)$/.exec(title);
+    const m = /^week[- ]?(\d+)$/i.exec(title);
     if (m) out.push({ sheetName: title, weekNumber: parseInt(m[1], 10) });
   }
   out.sort((a, b) => a.weekNumber - b.weekNumber);
@@ -90,9 +97,12 @@ export async function fetchSheetRows(
 
   const nameIdx = findIdx('student name', 'name');
   const mobileIdx = findIdx('mobile number', 'mobile', 'phone');
-  const scoreIdx = findIdx('(out of 80)', 'out of 80', 'score');
+  const scoreIdx = findIdx('total_score', 'total score', 'score');
+  const finalScoreIdx = findIdx('final_score', 'final score', 'Final_Score');
+  const winnerUpIdx = findIdx('winner_up', 'winner up', 'Winner-Up');
+  const runnerUpIdx = findIdx('runner_up', 'runner up', 'Runner_Up');
 
-  if (nameIdx === -1 || mobileIdx === -1 || scoreIdx === -1) return [];
+  if (nameIdx === -1 || mobileIdx === -1) return [];
 
   const rows: StudentRow[] = [];
   for (let i = 1; i < values.length; i++) {
@@ -100,12 +110,24 @@ export async function fetchSheetRows(
     if (!row) continue;
     const mobile = normalizeMobile(row[mobileIdx]);
     if (!mobile) continue;
-    const rawScore = row[scoreIdx];
-    if (rawScore == null || String(rawScore).trim() === '') continue;
-    const score = Number(String(rawScore).replace(/[^\d.\-]/g, ''));
-    if (!Number.isFinite(score)) continue;
+    const rawScore = scoreIdx !== -1 ? row[scoreIdx] : 0;
+    const rawFinalScore = finalScoreIdx !== -1 ? row[finalScoreIdx] : 0;
+    const rawWinnerUp = winnerUpIdx !== -1 ? row[winnerUpIdx] : 0;
+    const rawRunnerUp = runnerUpIdx !== -1 ? row[runnerUpIdx] : 0;
+
+    const parseNum = (val: any) => {
+      if (val == null || String(val).trim() === '') return 0;
+      const n = Number(String(val).replace(/[^\d.\-]/g, ''));
+      return isFinite(n) ? n : 0;
+    };
+
+    const score = parseNum(rawScore);
+    const finalScore = finalScoreIdx !== -1 ? parseNum(rawFinalScore) : score;
+    const winnerUp = parseNum(rawWinnerUp);
+    const runnerUp = parseNum(rawRunnerUp);
+
     const name = String(row[nameIdx] ?? '').trim();
-    rows.push({ name, mobile, score, weekNumber });
+    rows.push({ name, mobile, score, finalScore, winnerUp, runnerUp, weekNumber });
   }
   return rows;
 }
@@ -122,10 +144,16 @@ export async function fetchAllStudents(): Promise<Student[]> {
     for (const r of rows) {
       const existing = map.get(r.mobile);
       if (existing) {
-        // sum if same week appears twice
         existing.weeklyScores[r.weekNumber] =
-          (existing.weeklyScores[r.weekNumber] ?? 0) + r.score;
-        existing.totalScore += r.score;
+          Number(existing.weeklyScores[r.weekNumber] ?? 0) + Number(r.finalScore);
+        existing.totalScore = Number(existing.totalScore) + Number(r.finalScore);
+        
+        existing.weeklyWinnerUp[r.weekNumber] = (existing.weeklyWinnerUp[r.weekNumber] ?? 0) + r.winnerUp;
+        existing.totalWinnerUp += r.winnerUp;
+        
+        existing.weeklyRunnerUp[r.weekNumber] = (existing.weeklyRunnerUp[r.weekNumber] ?? 0) + r.runnerUp;
+        existing.totalRunnerUp += r.runnerUp;
+
         if (r.weekNumber >= existing._latestWeekForName && r.name) {
           existing.name = r.name;
           existing._latestWeekForName = r.weekNumber;
@@ -134,8 +162,12 @@ export async function fetchAllStudents(): Promise<Student[]> {
         map.set(r.mobile, {
           mobile: r.mobile,
           name: r.name,
-          totalScore: r.score,
-          weeklyScores: { [r.weekNumber]: r.score },
+          totalScore: Number(r.finalScore),
+          totalWinnerUp: r.winnerUp,
+          totalRunnerUp: r.runnerUp,
+          weeklyScores: { [r.weekNumber]: Number(r.finalScore) },
+          weeklyWinnerUp: { [r.weekNumber]: r.winnerUp },
+          weeklyRunnerUp: { [r.weekNumber]: r.runnerUp },
           _latestWeekForName: r.weekNumber,
         });
       }

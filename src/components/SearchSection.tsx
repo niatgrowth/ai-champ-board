@@ -169,7 +169,7 @@ export default function SearchSection() {
             Find Your <span className="gold-gradient">Bootcamp Ranking</span>
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Search by your name to view your leaderboard position, league, and performance in the AI Bootcamp.
+            Search by your name or phone number to view your leaderboard position, league, and performance in the AI Bootcamp.
           </p>
         </div>
 
@@ -178,7 +178,7 @@ export default function SearchSection() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
-              placeholder="Search by name"
+              placeholder="Search by name or phone number"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-12 h-14 text-base bg-white border-border focus-visible:ring-primary rounded-xl shadow-sm"

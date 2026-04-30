@@ -161,6 +161,8 @@ function LeagueTable({
               <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
                 <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
                 <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
+                <TableHead className="text-muted-foreground text-center font-semibold">Winner Up</TableHead>
+                <TableHead className="text-muted-foreground text-center font-semibold">Runner Up</TableHead>
                 <TableHead className="text-muted-foreground text-right font-semibold">
                   Total Points
                 </TableHead>
@@ -185,6 +187,16 @@ function LeagueTable({
                       </div>
                       <span className="font-medium text-foreground text-sm">{student.name}</span>
                     </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-muted-foreground text-sm font-medium">
+                      {student.totalWinnerUp}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-muted-foreground text-sm font-medium">
+                      {student.totalRunnerUp}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <span className={`font-bold ${league.scoreColor}`}>

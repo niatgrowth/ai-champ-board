@@ -45,7 +45,10 @@ export function useAvailableMonths() {
 export interface WeeklyEntry {
   mobile: string;
   name: string;
-  score: number;
+  score: number; // raw
+  finalScore: number;
+  winnerUp: number;
+  runnerUp: number;
   rank: number;
   league: League;
 }
@@ -55,24 +58,42 @@ export function useWeeklyLeaderboard(weekNumber: number | undefined) {
     queryKey: ['weekly', weekNumber],
     queryFn: async (): Promise<WeeklyEntry[]> => {
       if (!weekNumber) return [];
-      const sheetName = `week-${weekNumber}`;
-      const rows = await fetchSheetRows(sheetName, weekNumber);
+      
+      // Resolve the actual sheet name from metadata
+      const sheets = await fetchAllSheetNames();
+      const sheet = sheets.find((s) => s.weekNumber === weekNumber);
+      
+      if (!sheet) {
+        console.warn(`No sheet found for week ${weekNumber}. Available:`, sheets);
+        return [];
+      }
+      
+      const rows = await fetchSheetRows(sheet.sheetName, weekNumber);
 
       // Group duplicates by mobile (sum)
-      const map = new Map<string, { name: string; score: number }>();
+      const map = new Map<string, { name: string; score: number; finalScore: number; winnerUp: number; runnerUp: number }>();
       for (const r of rows) {
         const existing = map.get(r.mobile);
         if (existing) {
           existing.score += r.score;
+          existing.finalScore += r.finalScore;
+          existing.winnerUp += r.winnerUp;
+          existing.runnerUp += r.runnerUp;
           if (r.name) existing.name = r.name;
         } else {
-          map.set(r.mobile, { name: r.name, score: r.score });
+          map.set(r.mobile, { 
+            name: r.name, 
+            score: r.score, 
+            finalScore: r.finalScore, 
+            winnerUp: r.winnerUp, 
+            runnerUp: r.runnerUp 
+          });
         }
       }
 
       const sorted = Array.from(map.entries())
         .map(([mobile, v]) => ({ mobile, ...v }))
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => b.finalScore - a.finalScore);
 
       const total = sorted.length;
       const platCount = Math.max(1, Math.round(total * 0.1));
@@ -105,6 +126,8 @@ export interface MonthlyEntry {
   mobile: string;
   name: string;
   monthScore: number;
+  monthWinnerUp: number;
+  monthRunnerUp: number;
   rank: number;
   weeksParticipated: number;
   bestWeekScore: number;
@@ -119,12 +142,16 @@ export function useMonthlyLeaderboard(monthNumber: number | undefined) {
         const out: MonthlyEntry[] = [];
         for (const s of students) {
           let monthScore = 0;
+          let monthWinnerUp = 0;
+          let monthRunnerUp = 0;
           let weeksParticipated = 0;
           let bestWeekScore = 0;
           for (const w of weeks) {
             const v = s.weeklyScores[w];
             if (typeof v === 'number') {
               monthScore += v;
+              monthWinnerUp += (s.weeklyWinnerUp[w] ?? 0);
+              monthRunnerUp += (s.weeklyRunnerUp[w] ?? 0);
               weeksParticipated += 1;
               if (v > bestWeekScore) bestWeekScore = v;
             }
@@ -134,6 +161,8 @@ export function useMonthlyLeaderboard(monthNumber: number | undefined) {
               mobile: s.mobile,
               name: s.name,
               monthScore,
+              monthWinnerUp,
+              monthRunnerUp,
               weeksParticipated,
               bestWeekScore,
               rank: 0,
@@ -163,10 +192,17 @@ export function useSearchStudents(query: string) {
 
   const data: RankedStudent[] | undefined =
     enabled && ranked
-      ? ranked.filter(
-          (s) =>
-            s.name.toLowerCase().includes(q) || s.mobile.includes(q.replace(/\D/g, ''))
-        )
+      ? ranked.filter((s) => {
+          const nameMatch = s.name.toLowerCase().includes(q);
+          const digits = query.replace(/\D/g, '');
+          // If query has digits, check if it matches the mobile (last 10 digits)
+          // We check if the student's mobile contains the query digits, 
+          // or if the query digits (last 10) contain the student's mobile.
+          const searchDigits = digits.length > 10 ? digits.slice(-10) : digits;
+          const phoneMatch = digits.length >= 3 && s.mobile.includes(searchDigits);
+          
+          return nameMatch || phoneMatch;
+        })
       : enabled
       ? undefined
       : [];
