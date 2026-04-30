@@ -8,32 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useStudents } from '@/hooks/useLeaderboard';
-import { getInitials } from '@/lib/leaderboard-utils';
+import { useOverallLeaderboard } from '@/hooks/useLeaderboard';
+import { getInitials, type RankedStudent } from '@/lib/leaderboard-utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Student } from '@/lib/supabase';
-
-/** Dynamic league distribution: 10% Platinum, 20% Gold, 30% Silver, 40% Bronze */
-function distributeLeagues(students: Student[]): {
-  platinum: Student[];
-  gold: Student[];
-  silver: Student[];
-  bronze: Student[];
-} {
-  const sorted = [...students].sort((a, b) => b.cumulative_score - a.cumulative_score);
-  const total = sorted.length;
-
-  const platCount = Math.max(1, Math.round(total * 0.10));
-  const goldCount = Math.max(1, Math.round(total * 0.20));
-  const silverCount = Math.max(1, Math.round(total * 0.30));
-
-  const platinum = sorted.slice(0, platCount);
-  const gold = sorted.slice(platCount, platCount + goldCount);
-  const silver = sorted.slice(platCount + goldCount, platCount + goldCount + silverCount);
-  const bronze = sorted.slice(platCount + goldCount + silverCount);
-
-  return { platinum, gold, silver, bronze };
-}
 
 const LEAGUES = [
   {
@@ -78,9 +55,7 @@ function LaurelLeft({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 60 36" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
       <g opacity="0.85">
-        {/* Main branch stem */}
         <path d="M54 18 Q40 16 26 20 Q14 24 6 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-        {/* Leaves along the branch */}
         <ellipse cx="46" cy="12" rx="7" ry="3.5" transform="rotate(-25 46 12)" fill="currentColor" opacity="0.7"/>
         <ellipse cx="38" cy="9" rx="6.5" ry="3" transform="rotate(-35 38 9)" fill="currentColor" opacity="0.65"/>
         <ellipse cx="30" cy="8" rx="6" ry="3" transform="rotate(-20 30 8)" fill="currentColor" opacity="0.6"/>
@@ -90,7 +65,6 @@ function LaurelLeft({ className }: { className?: string }) {
         <ellipse cx="36" cy="27" rx="6" ry="2.8" transform="rotate(30 36 27)" fill="currentColor" opacity="0.6"/>
         <ellipse cx="28" cy="28" rx="5.5" ry="2.5" transform="rotate(15 28 28)" fill="currentColor" opacity="0.55"/>
         <ellipse cx="20" cy="26" rx="5" ry="2.3" transform="rotate(5 20 26)" fill="currentColor" opacity="0.5"/>
-        {/* Berries */}
         <circle cx="10" cy="18" r="2.2" fill="currentColor" opacity="0.8"/>
         <circle cx="7" cy="16" r="1.5" fill="currentColor" opacity="0.6"/>
         <circle cx="7" cy="20" r="1.5" fill="currentColor" opacity="0.6"/>
@@ -150,23 +124,19 @@ function RankBadge({ rank }: { rank: number }) {
 function LeagueTable({
   league,
   students,
-  globalOffset,
 }: {
   league: (typeof LEAGUES)[0];
-  students: Student[];
-  globalOffset: number;
+  students: RankedStudent[];
 }) {
   const [expanded, setExpanded] = useState(true);
 
   return (
     <div className={`glass-card rounded-2xl overflow-hidden animate-fade-in shadow-md transition-shadow hover:shadow-lg ${league.glowClass}`}>
-      {/* Header with laurel wreath design */}
       <button
         onClick={() => setExpanded(!expanded)}
         className={`w-full p-5 ${league.headerClass} hover:opacity-90 transition-opacity`}
       >
         <div className="flex items-center justify-between w-full">
-          {/* Laurel title centered */}
           <div className="flex-1 flex items-center justify-center gap-2">
             <LaurelLeft className={`w-14 h-9 ${league.laurelColor} shrink-0`} />
             <span className={`text-base font-black tracking-[0.18em] ${league.titleColor} select-none`}>
@@ -194,25 +164,19 @@ function LeagueTable({
                 <TableHead className="text-muted-foreground text-right font-semibold">
                   Total Points
                 </TableHead>
-                <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">
-                  Best Weekly Score
-                </TableHead>
-                <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">
-                  Projects Built
-                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {students.map((student, idx) => (
                 <TableRow
-                  key={student.id}
+                  key={student.mobile}
                   className={`border-border/30 transition-all duration-200 cursor-default
                     hover:bg-secondary/50 hover:shadow-sm hover:scale-[1.002]
                     ${idx < 3 ? 'table-row-highlight' : ''}
                   `}
                 >
                   <TableCell>
-                    <RankBadge rank={globalOffset + idx + 1} />
+                    <RankBadge rank={student.rank} />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2.5">
@@ -224,14 +188,8 @@ function LeagueTable({
                   </TableCell>
                   <TableCell className="text-right">
                     <span className={`font-bold ${league.scoreColor}`}>
-                      {student.cumulative_score}
+                      {student.totalScore}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-right text-foreground hidden sm:table-cell font-medium">
-                    {student.best_weekly_score}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground hidden md:table-cell">
-                    {student.projects_submitted}
                   </TableCell>
                 </TableRow>
               ))}
@@ -244,19 +202,14 @@ function LeagueTable({
 }
 
 export default function OverallLeaderboard() {
-  const { data: allStudents, isLoading } = useStudents();
+  const { data: ranked, isLoading } = useOverallLeaderboard();
 
-  const distributed = allStudents ? distributeLeagues(allStudents) : null;
-
-  const leagueOffsets = distributed
+  const grouped = ranked
     ? {
-        platinum: 0,
-        gold: distributed.platinum.length,
-        silver: distributed.platinum.length + distributed.gold.length,
-        bronze:
-          distributed.platinum.length +
-          distributed.gold.length +
-          distributed.silver.length,
+        platinum: ranked.filter((s) => s.league === 'platinum'),
+        gold: ranked.filter((s) => s.league === 'gold'),
+        silver: ranked.filter((s) => s.league === 'silver'),
+        bronze: ranked.filter((s) => s.league === 'bronze'),
       }
     : null;
 
@@ -289,14 +242,12 @@ export default function OverallLeaderboard() {
                   </div>
                 </div>
               ))
-            : distributed &&
-              leagueOffsets &&
+            : grouped &&
               LEAGUES.map((league) => (
                 <LeagueTable
                   key={league.id}
                   league={league}
-                  students={distributed[league.id]}
-                  globalOffset={leagueOffsets[league.id]}
+                  students={grouped[league.id]}
                 />
               ))}
         </div>

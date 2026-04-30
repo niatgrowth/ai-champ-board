@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Trophy, Star } from 'lucide-react';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -6,16 +6,25 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { useMonthlyScores } from '@/hooks/useLeaderboard';
+import { useMonthlyLeaderboard, useAvailableMonths } from '@/hooks/useLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getInitials } from '@/lib/leaderboard-utils';
 
-const MONTHS = [
-  { label: 'November 2025', weeks: [1, 2, 3, 4] },
-  { label: 'December 2025', weeks: [5, 6, 7, 8] },
-  { label: 'January 2026', weeks: [9, 10, 11, 12] },
-  { label: 'February 2026', weeks: [13, 14, 15, 16] },
-];
+const MONTH_LABELS: Record<number, string> = {
+  1: 'November 2025',
+  2: 'December 2025',
+  3: 'January 2026',
+  4: 'February 2026',
+};
+
+function monthLabel(m: number) {
+  return MONTH_LABELS[m] ?? `Month ${m}`;
+}
+
+function monthWeeksLabel(m: number) {
+  const start = (m - 1) * 4 + 1;
+  return `Weeks ${start}–${start + 3}`;
+}
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1)
@@ -44,9 +53,18 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 export default function MonthlyLeaderboard() {
-  const [selectedMonth, setSelectedMonth] = useState(0);
-  const month = MONTHS[selectedMonth];
-  const { data: scores, isLoading } = useMonthlyScores(month.weeks);
+  const { data: availableMonths } = useAvailableMonths();
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+
+  // Default to the latest available month once known
+  useEffect(() => {
+    if (selectedMonth == null && availableMonths && availableMonths.length > 0) {
+      setSelectedMonth(Math.max(...availableMonths));
+    }
+  }, [availableMonths, selectedMonth]);
+
+  const activeMonth = selectedMonth ?? (availableMonths?.[availableMonths.length - 1]);
+  const { data: scores, isLoading } = useMonthlyLeaderboard(activeMonth);
 
   return (
     <section id="monthly" className="py-16 px-4">
@@ -63,38 +81,42 @@ export default function MonthlyLeaderboard() {
         </div>
 
         <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">
-          {/* Month selector header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-border/40 bg-gradient-to-r from-primary/5 to-transparent gap-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-foreground">{month.label}</span>
-              <span className="text-xs text-muted-foreground">(Weeks {month.weeks[0]}–{month.weeks[month.weeks.length - 1]})</span>
+              <span className="font-semibold text-foreground">
+                {activeMonth ? monthLabel(activeMonth) : 'Loading…'}
+              </span>
+              {activeMonth && (
+                <span className="text-xs text-muted-foreground">({monthWeeksLabel(activeMonth)})</span>
+              )}
             </div>
-            <Select
-              value={String(selectedMonth)}
-              onValueChange={(v) => setSelectedMonth(parseInt(v))}
-            >
-              <SelectTrigger className="w-44 bg-white border-border text-foreground text-sm shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-border">
-                {MONTHS.map((m, i) => (
-                  <SelectItem key={i} value={String(i)} className="text-foreground">
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {availableMonths && availableMonths.length > 0 && activeMonth && (
+              <Select
+                value={String(activeMonth)}
+                onValueChange={(v) => setSelectedMonth(parseInt(v))}
+              >
+                <SelectTrigger className="w-44 bg-white border-border text-foreground text-sm shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-border">
+                  {availableMonths.map((m) => (
+                    <SelectItem key={m} value={String(m)} className="text-foreground">
+                      {monthLabel(m)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
-          {/* Top performer highlight */}
           {!isLoading && scores && scores.length > 0 && (
             <div className="px-5 py-3 bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-amber-200/40 flex items-center gap-2">
               <Trophy className="w-4 h-4 text-yellow-600" />
               <span className="text-sm font-semibold text-yellow-700">Top Performer of the Month:</span>
               <span className="text-sm font-bold text-foreground">{scores[0].name}</span>
               <Star className="w-3.5 h-3.5 text-yellow-500" />
-              <span className="text-xs text-muted-foreground">({scores[0].monthlyScore} pts)</span>
+              <span className="text-xs text-muted-foreground">({scores[0].monthScore} pts)</span>
             </div>
           )}
 
@@ -106,8 +128,7 @@ export default function MonthlyLeaderboard() {
                   <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
                   <TableHead className="text-muted-foreground text-right font-semibold">Monthly Score</TableHead>
                   <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Best Week</TableHead>
-                  <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Projects</TableHead>
-                  <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">Bonus Count</TableHead>
+                  <TableHead className="text-muted-foreground text-right hidden sm:table-cell font-semibold">Weeks</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -119,17 +140,16 @@ export default function MonthlyLeaderboard() {
                         <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
                         <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                         <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
                       </TableRow>
                     ))
-                  : scores?.map((s, idx) => (
+                  : scores?.map((s) => (
                       <TableRow
-                        key={s.studentId}
+                        key={s.mobile}
                         className={`border-border/30 hover:bg-secondary/40 transition-colors ${
-                          idx < 3 ? 'table-row-highlight' : ''
+                          s.rank <= 3 ? 'table-row-highlight' : ''
                         }`}
                       >
-                        <TableCell><RankBadge rank={idx + 1} /></TableCell>
+                        <TableCell><RankBadge rank={s.rank} /></TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0 border border-border/50">
@@ -139,16 +159,13 @@ export default function MonthlyLeaderboard() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <span className="font-bold text-primary text-base">{s.monthlyScore}</span>
+                          <span className="font-bold text-primary text-base">{s.monthScore}</span>
                         </TableCell>
                         <TableCell className="text-right hidden sm:table-cell">
-                          <span className="font-semibold text-foreground">{s.bestWeeklyScore}</span>
+                          <span className="font-semibold text-foreground">{s.bestWeekScore}</span>
                         </TableCell>
                         <TableCell className="text-right hidden sm:table-cell">
-                          <span className="font-semibold text-foreground">{s.projectsSubmitted}</span>
-                        </TableCell>
-                        <TableCell className="text-right hidden md:table-cell">
-                          <span className="font-semibold text-foreground">{s.bonusCount}</span>
+                          <span className="font-semibold text-foreground">{s.weeksParticipated}</span>
                         </TableCell>
                       </TableRow>
                     ))}

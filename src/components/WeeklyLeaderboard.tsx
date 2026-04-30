@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarDays, Info } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -15,57 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useWeeklyScores, useSettings } from '@/hooks/useLeaderboard';
+import { useWeeklyLeaderboard, useAvailableWeeks } from '@/hooks/useLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getInitials } from '@/lib/leaderboard-utils';
-
-const ALL_WEEKS = Array.from({ length: 16 }, (_, i) => i + 1);
-
-/**
- * Scoring rules (Max = 100):
- * - Project Score: out of 80 (0 if not submitted)
- * - Winner:
- *     Weeks 1–11 → Top 2 get +20
- *     Weeks 12–16 → Top 1 gets +20
- * - Runner-up: next 10 after winners get +10
- */
-function computeEnrichedScores(
-  scores: Array<{ id: string; marks: number; attendance: boolean; bonus: number; weekly_score: number; students?: { name: string; league: string } }>,
-  weekNumber: number
-) {
-  const winnerCount = weekNumber <= 11 ? 2 : 1;
-  const runnerUpEnd = winnerCount + 10;
-
-  // If project not submitted (bonus === 0), project eval score is 0
-  const enriched = scores.map((score) => {
-    const projectSubmitted = score.bonus > 0;
-    const effectiveMarks = projectSubmitted ? Math.min(score.marks, 80) : 0;
-    return { ...score, effectiveMarks };
-  });
-
-  // Sort by base project score to determine winners/runner-ups
-  const sorted = [...enriched].sort((a, b) => b.effectiveMarks - a.effectiveMarks);
-
-  return sorted.map((score, idx) => {
-    const rank = idx + 1;
-    const winnerBonus = rank <= winnerCount ? 20 : 0;
-    const runnerUpBonus = rank > winnerCount && rank <= runnerUpEnd ? 10 : 0;
-    const computedWeeklyScore = score.effectiveMarks + winnerBonus + runnerUpBonus;
-    return {
-      ...score,
-      rank,
-      winnerBonus,
-      runnerUpBonus,
-      computed_weekly_score: computedWeeklyScore,
-    };
-  });
-}
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1)
@@ -94,55 +46,38 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 export default function WeeklyLeaderboard() {
-  const { data: settings } = useSettings();
-  const currentWeek = parseInt(settings?.current_week ?? '6');
+  const { data: availableWeeks } = useAvailableWeeks();
+  const currentWeek = availableWeeks && availableWeeks.length > 0
+    ? Math.max(...availableWeeks)
+    : undefined;
+
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
-
   const activeWeek = selectedWeek ?? currentWeek;
-  const { data: rawScores, isLoading } = useWeeklyScores(activeWeek);
-
-  const scores = rawScores ? computeEnrichedScores(rawScores, activeWeek) : [];
+  const { data: scores, isLoading } = useWeeklyLeaderboard(activeWeek);
 
   return (
-    <TooltipProvider>
-      <section id="weekly" className="py-16 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10 animate-fade-in">
-            <div className="section-badge">
-              <CalendarDays className="w-4 h-4 text-primary" />
-              Weekly Rankings
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Weekly <span className="gold-gradient">Leaderboard</span>
-            </h2>
-            <p className="text-muted-foreground">Track your weekly score, performance, and progress in real-time.</p>
+    <section id="weekly" className="py-16 px-4">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-10 animate-fade-in">
+          <div className="section-badge">
+            <CalendarDays className="w-4 h-4 text-primary" />
+            Weekly Rankings
           </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+            Weekly <span className="gold-gradient">Leaderboard</span>
+          </h2>
+          <p className="text-muted-foreground">Track your weekly score, performance, and progress in real-time.</p>
+        </div>
 
-          <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">
-            {/* Week selector header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-border/40 bg-gradient-to-r from-primary/5 to-transparent gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <CalendarDays className="w-5 h-5 text-primary" />
-                <span className="font-semibold text-foreground">Week {activeWeek} Scores</span>
-                {/* Score calculation tooltip */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="flex items-center gap-1 text-xs bg-secondary border border-border px-2 py-1 rounded-full text-muted-foreground hover:text-foreground transition-colors cursor-help">
-                      <Info className="w-3.5 h-3.5" />
-                      Weekly Score Calculation
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[260px] text-xs leading-relaxed p-3">
-                    <p className="font-semibold mb-1.5 text-foreground">Weekly Score =</p>
-                    <ul className="space-y-1 text-muted-foreground">
-                      <li>📝 Project Score (/80)</li>
-                      <li>🏆 Winner (Wk 1–11 top 2, Wk 12–16 top 1): <span className="text-foreground font-medium">+20</span></li>
-                      <li>🥈 Runner Up (next 10): <span className="text-foreground font-medium">+10</span></li>
-                    </ul>
-                    <p className="mt-1.5 text-foreground font-medium">Max = 100</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+        <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-border/40 bg-gradient-to-r from-primary/5 to-transparent gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <CalendarDays className="w-5 h-5 text-primary" />
+              <span className="font-semibold text-foreground">
+                {activeWeek ? `Week ${activeWeek} Scores` : 'Loading…'}
+              </span>
+            </div>
+            {availableWeeks && availableWeeks.length > 0 && activeWeek && (
               <Select
                 value={String(activeWeek)}
                 onValueChange={(v) => setSelectedWeek(parseInt(v))}
@@ -151,82 +86,63 @@ export default function WeeklyLeaderboard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-border">
-                  {ALL_WEEKS.map((w) => (
+                  {availableWeeks.map((w) => (
                     <SelectItem key={w} value={String(w)} className="text-foreground">
                       Week {w}{w === currentWeek ? ' (Current)' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            )}
+          </div>
 
-            <div className="overflow-x-auto overflow-y-auto max-h-96 scrollbar-thin">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
-                    <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
-                    <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
-                    <TableHead className="text-muted-foreground text-right font-semibold">Score (/80)</TableHead>
-                    <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">Winner</TableHead>
-                    <TableHead className="text-muted-foreground text-right hidden md:table-cell font-semibold">Runner Up</TableHead>
-                    <TableHead className="text-muted-foreground text-right font-semibold">Weekly Score</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading
-                    ? Array.from({ length: 8 }).map((_, i) => (
-                        <TableRow key={i} className="border-border/20">
-                          <TableCell><Skeleton className="h-5 w-7" /></TableCell>
-                          <TableCell><Skeleton className="h-5 w-36" /></TableCell>
-                          <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
-                          <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                          <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                          <TableCell><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
-                        </TableRow>
-                      ))
-                    : scores.map((score) => (
-                        <TableRow
-                          key={score.id}
-                          className={`border-border/30 hover:bg-secondary/40 transition-colors ${
-                            score.rank <= 3 ? 'table-row-highlight' : ''
-                          }`}
-                        >
-                          <TableCell><RankBadge rank={score.rank} /></TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0 border border-border/50">
-                                {getInitials(score.students?.name ?? '??')}
-                              </div>
-                              <span className="font-medium text-foreground text-sm">
-                                {score.students?.name}
-                              </span>
+          <div className="overflow-x-auto overflow-y-auto max-h-96 scrollbar-thin">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
+                  <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
+                  <TableHead className="text-muted-foreground text-right font-semibold">Score (/80)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading
+                  ? Array.from({ length: 8 }).map((_, i) => (
+                      <TableRow key={i} className="border-border/20">
+                        <TableCell><Skeleton className="h-5 w-7" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
+                      </TableRow>
+                    ))
+                  : (scores ?? []).map((score) => (
+                      <TableRow
+                        key={score.mobile}
+                        className={`border-border/30 hover:bg-secondary/40 transition-colors ${
+                          score.rank <= 3 ? 'table-row-highlight' : ''
+                        }`}
+                      >
+                        <TableCell><RankBadge rank={score.rank} /></TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0 border border-border/50">
+                              {getInitials(score.name)}
                             </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span className="font-semibold text-foreground">{score.effectiveMarks}</span>
-                            <span className="text-muted-foreground text-xs">/80</span>
-                          </TableCell>
-                          <TableCell className="text-right hidden md:table-cell">
-                            <span className={`text-sm font-bold ${score.winnerBonus > 0 ? 'text-yellow-600' : 'text-muted-foreground'}`}>
-                              {score.winnerBonus > 0 ? '+20' : '0'}
+                            <span className="font-medium text-foreground text-sm">
+                              {score.name}
                             </span>
-                          </TableCell>
-                          <TableCell className="text-right hidden md:table-cell">
-                            <span className={`text-sm font-semibold ${score.runnerUpBonus > 0 ? 'text-slate-600' : 'text-muted-foreground'}`}>
-                              {score.runnerUpBonus > 0 ? '+10' : '0'}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span className="font-bold text-primary text-base">{score.computed_weekly_score}</span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                </TableBody>
-              </Table>
-            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="font-bold text-primary text-base">{score.score}</span>
+                          <span className="text-muted-foreground text-xs">/80</span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
-      </section>
-    </TooltipProvider>
+      </div>
+    </section>
   );
 }
