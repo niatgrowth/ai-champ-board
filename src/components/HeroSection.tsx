@@ -1,24 +1,25 @@
 import { Users, FolderOpen } from 'lucide-react';
-import { useSettings, useStudents } from '@/hooks/useLeaderboard';
+import { useAllStudents, useAvailableWeeks } from '@/hooks/useLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HeroSection() {
-  const { data: settings, isLoading: settingsLoading } = useSettings();
-  const { data: allStudents, isLoading: studentsLoading } = useStudents();
+  const { data: allStudents, isLoading: studentsLoading } = useAllStudents();
+  const { data: weeks, isLoading: weeksLoading } = useAvailableWeeks();
 
-  const isLoading = settingsLoading || studentsLoading;
-
-  // Dynamically calculate total project submissions
-  const totalProjects = allStudents
-    ? allStudents.reduce((sum, s) => sum + (s.projects_submitted ?? 0), 0)
-    : null;
+  const isLoading = studentsLoading || weeksLoading;
 
   const totalStudents = allStudents?.length ?? null;
+  const totalProjects = allStudents
+    ? allStudents.reduce(
+        (sum, s) => sum + Object.keys(s.weeklyScores).length,
+        0
+      )
+    : null;
 
   const stats = [
     {
       label: 'Total Active Participants',
-      value: totalStudents ?? settings?.total_students ?? '—',
+      value: totalStudents ?? '—',
       icon: Users,
       color: 'text-platinum',
       bg: 'from-blue-500/8 to-transparent',
@@ -27,7 +28,7 @@ export default function HeroSection() {
     },
     {
       label: 'Total Project Submissions',
-      value: totalProjects ?? settings?.total_projects ?? '—',
+      value: totalProjects ?? '—',
       icon: FolderOpen,
       color: 'text-primary',
       bg: 'from-amber-400/8 to-transparent',
@@ -35,6 +36,8 @@ export default function HeroSection() {
       iconBg: 'bg-amber-50 border-amber-200',
     },
   ];
+
+  void weeks;
 
   return (
     <section id="home" className="relative pt-28 pb-16 px-4 overflow-hidden">
