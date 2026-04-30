@@ -1,198 +1,175 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase, type Student, type WeeklyScore } from '@/lib/supabase';
+import {
+  fetchAllSheetNames,
+  fetchAllStudents,
+  fetchSheetRows,
+  type Student,
+} from '@/lib/sheets';
+import {
+  assignLeagues,
+  getMonthWeeks,
+  getAvailableMonths,
+  type RankedStudent,
+  type League,
+} from '@/lib/leaderboard-utils';
 
-export function useStudents(league?: string) {
-  return useQuery({
-    queryKey: ['students', league],
-    queryFn: async () => {
-      let query = supabase
-        .from('students')
-        .select('*')
-        .order('cumulative_score', { ascending: false });
-      if (league) query = query.eq('league', league);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Student[];
-    },
-  });
-}
+const STALE = 10 * 60 * 1000; // 10 minutes
 
-export function useTopChampions() {
+export function useAllStudents() {
   return useQuery({
-    queryKey: ['champions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('league', 'platinum')
-        .order('cumulative_score', { ascending: false })
-        .limit(3);
-      if (error) throw error;
-      return data as Student[];
-    },
-  });
-}
-
-export function useWeeklyScores(weekNumber: number) {
-  return useQuery({
-    queryKey: ['weekly_scores', weekNumber],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('weekly_scores')
-        .select('*, students(name, league)')
-        .eq('week_number', weekNumber)
-        .order('weekly_score', { ascending: false });
-      if (error) throw error;
-      return data as (WeeklyScore & { students: { name: string; league: string } })[];
-    },
+    queryKey: ['students'],
+    queryFn: fetchAllStudents,
+    staleTime: STALE,
   });
 }
 
 export function useAvailableWeeks() {
   return useQuery({
-    queryKey: ['available_weeks'],
+    queryKey: ['availableWeeks'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('weekly_scores')
-        .select('week_number')
-        .order('week_number', { ascending: false });
-      if (error) throw error;
-      const weeks = [...new Set((data || []).map((d) => d.week_number))];
-      return weeks as number[];
+      const sheets = await fetchAllSheetNames();
+      return sheets.map((s) => s.weekNumber);
     },
+    staleTime: STALE,
   });
 }
 
-export function useSettings() {
-  return useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('settings').select('*');
-      if (error) throw error;
-      const map: Record<string, string> = {};
-      (data || []).forEach((s) => { map[s.key] = s.value; });
-      return map;
-    },
-  });
+export function useAvailableMonths() {
+  const weeks = useAvailableWeeks();
+  return {
+    ...weeks,
+    data: weeks.data ? getAvailableMonths(weeks.data) : undefined,
+  };
 }
 
-/** Distribute students into leagues exactly as OverallLeaderboard does */
-function distributeLeaguesForRank(students: Student[]): Map<string, { student: Student; globalRank: number; leagueRank: number; league: string }> {
-  const sorted = [...students].sort((a, b) => b.cumulative_score - a.cumulative_score);
-  const total = sorted.length;
-  const platCount = Math.max(1, Math.round(total * 0.10));
-  const goldCount = Math.max(1, Math.round(total * 0.20));
-  const silverCount = Math.max(1, Math.round(total * 0.30));
-
-  const slices: [string, Student[]][] = [
-    ['platinum', sorted.slice(0, platCount)],
-    ['gold', sorted.slice(platCount, platCount + goldCount)],
-    ['silver', sorted.slice(platCount + goldCount, platCount + goldCount + silverCount)],
-    ['bronze', sorted.slice(platCount + goldCount + silverCount)],
-  ];
-
-  const map = new Map<string, { student: Student; globalRank: number; leagueRank: number; league: string }>();
-  let globalRank = 0;
-  for (const [league, group] of slices) {
-    group.forEach((s, i) => {
-      globalRank++;
-      map.set(s.id, { student: s, globalRank, leagueRank: i + 1, league });
-    });
-  }
-  return map;
+export interface WeeklyEntry {
+  mobile: string;
+  name: string;
+  score: number;
+  rank: number;
+  league: League;
 }
 
-export function useMonthlyScores(weeks: number[]) {
+export function useWeeklyLeaderboard(weekNumber: number | undefined) {
   return useQuery({
-    queryKey: ['monthly_scores', weeks],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('weekly_scores')
-        .select('*, students(name)')
-        .in('week_number', weeks);
-      if (error) throw error;
+    queryKey: ['weekly', weekNumber],
+    queryFn: async (): Promise<WeeklyEntry[]> => {
+      if (!weekNumber) return [];
+      const sheetName = `week-${weekNumber}`;
+      const rows = await fetchSheetRows(sheetName, weekNumber);
 
-      // Aggregate per student
-      const map = new Map<string, {
-        studentId: string;
-        name: string;
-        monthlyScore: number;
-        bestWeeklyScore: number;
-        projectsSubmitted: number;
-        bonusCount: number;
-      }>();
-
-      for (const row of data ?? []) {
-        const sid = row.student_id;
-        const name = (row as any).students?.name ?? 'Unknown';
-        const existing = map.get(sid);
-        const ws = row.weekly_score;
-        const proj = row.bonus > 0 ? 1 : 0;
-        // bonus appearance = received winner (+20) or runner-up (+10) bonus
-        const baseMarks = row.bonus > 0 ? row.marks : 0;
-        const bonusAppearance = ws - baseMarks > 0 ? 1 : 0;
-
+      // Group duplicates by mobile (sum)
+      const map = new Map<string, { name: string; score: number }>();
+      for (const r of rows) {
+        const existing = map.get(r.mobile);
         if (existing) {
-          existing.monthlyScore += ws;
-          existing.bestWeeklyScore = Math.max(existing.bestWeeklyScore, ws);
-          existing.projectsSubmitted += proj;
-          existing.bonusCount += bonusAppearance;
+          existing.score += r.score;
+          if (r.name) existing.name = r.name;
         } else {
-          map.set(sid, {
-            studentId: sid,
-            name,
-            monthlyScore: ws,
-            bestWeeklyScore: ws,
-            projectsSubmitted: proj,
-            bonusCount: bonusAppearance,
-          });
+          map.set(r.mobile, { name: r.name, score: r.score });
         }
       }
 
-      // Sort with tie-breakers
-      const results = Array.from(map.values()).sort((a, b) => {
-        if (b.monthlyScore !== a.monthlyScore) return b.monthlyScore - a.monthlyScore;
-        if (b.bestWeeklyScore !== a.bestWeeklyScore) return b.bestWeeklyScore - a.bestWeeklyScore;
-        if (b.projectsSubmitted !== a.projectsSubmitted) return b.projectsSubmitted - a.projectsSubmitted;
-        return b.bonusCount - a.bonusCount;
-      });
+      const sorted = Array.from(map.entries())
+        .map(([mobile, v]) => ({ mobile, ...v }))
+        .sort((a, b) => b.score - a.score);
 
-      return results;
+      const total = sorted.length;
+      const platCount = Math.max(1, Math.round(total * 0.1));
+      const goldCount = Math.max(1, Math.round(total * 0.2));
+      const silverCount = Math.max(1, Math.round(total * 0.3));
+
+      return sorted.map((s, i) => {
+        let league: League;
+        if (i < platCount) league = 'platinum';
+        else if (i < platCount + goldCount) league = 'gold';
+        else if (i < platCount + goldCount + silverCount) league = 'silver';
+        else league = 'bronze';
+        return { ...s, rank: i + 1, league };
+      });
     },
+    enabled: typeof weekNumber === 'number' && weekNumber > 0,
+    staleTime: STALE,
   });
 }
 
+export function useOverallLeaderboard() {
+  const { data, ...rest } = useAllStudents();
+  return {
+    ...rest,
+    data: data ? assignLeagues(data) : undefined,
+  };
+}
+
+export interface MonthlyEntry {
+  mobile: string;
+  name: string;
+  monthScore: number;
+  rank: number;
+  weeksParticipated: number;
+  bestWeekScore: number;
+}
+
+export function useMonthlyLeaderboard(monthNumber: number | undefined) {
+  const { data: students, isLoading, error } = useAllStudents();
+  const weeks = monthNumber ? getMonthWeeks(monthNumber) : [];
+
+  const data: MonthlyEntry[] | undefined = students
+    ? (() => {
+        const out: MonthlyEntry[] = [];
+        for (const s of students) {
+          let monthScore = 0;
+          let weeksParticipated = 0;
+          let bestWeekScore = 0;
+          for (const w of weeks) {
+            const v = s.weeklyScores[w];
+            if (typeof v === 'number') {
+              monthScore += v;
+              weeksParticipated += 1;
+              if (v > bestWeekScore) bestWeekScore = v;
+            }
+          }
+          if (weeksParticipated > 0) {
+            out.push({
+              mobile: s.mobile,
+              name: s.name,
+              monthScore,
+              weeksParticipated,
+              bestWeekScore,
+              rank: 0,
+            });
+          }
+        }
+        out.sort((a, b) => b.monthScore - a.monthScore);
+        return out.map((e, i) => ({ ...e, rank: i + 1 }));
+      })()
+    : undefined;
+
+  return { data, isLoading, error };
+}
+
+export function useTopChampions() {
+  const { data, ...rest } = useOverallLeaderboard();
+  return {
+    ...rest,
+    data: data ? data.slice(0, 3) : undefined,
+  };
+}
+
 export function useSearchStudents(query: string) {
-  return useQuery({
-    queryKey: ['search', query],
-    queryFn: async () => {
-      if (!query.trim()) return [];
+  const { data: ranked, isLoading, error, isFetching } = useOverallLeaderboard();
+  const q = query.trim().toLowerCase();
+  const enabled = q.length >= 2;
 
-      // Fetch ALL students to compute correct global ranks
-      const { data: allStudents, error: allError } = await supabase
-        .from('students')
-        .select('*')
-        .order('cumulative_score', { ascending: false });
-      if (allError) throw allError;
+  const data: RankedStudent[] | undefined =
+    enabled && ranked
+      ? ranked.filter(
+          (s) =>
+            s.name.toLowerCase().includes(q) || s.mobile.includes(q.replace(/\D/g, ''))
+        )
+      : enabled
+      ? undefined
+      : [];
 
-      const rankMap = distributeLeaguesForRank((allStudents ?? []) as Student[]);
-
-      // Filter matching students
-      const q = query.toLowerCase();
-      const matched = ((allStudents ?? []) as Student[]).filter(
-        (s) => s.name.toLowerCase().includes(q) || (s.mobile ?? '').includes(q)
-      );
-
-      return matched.map((s) => {
-        const info = rankMap.get(s.id);
-        return {
-          ...s,
-          globalRank: info?.globalRank ?? 0,
-          leagueRank: info?.leagueRank ?? 0,
-          assignedLeague: info?.league ?? s.league,
-        };
-      });
-    },
-    enabled: query.trim().length >= 2,
-  });
+  return { data, isLoading: enabled ? isLoading : false, isFetching, error };
 }

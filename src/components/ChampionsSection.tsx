@@ -82,7 +82,7 @@ export default function ChampionsSection() {
               if (!student) return null;
               return (
                 <div
-                  key={student.id}
+                  key={student.mobile}
                   className={`flex-1 max-w-[280px] w-full flex flex-col items-center animate-fade-in ${config.order}`}
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
@@ -108,7 +108,7 @@ export default function ChampionsSection() {
 
                     {/* Score */}
                     <div className={`text-3xl font-black ${config.rankColor}`}>
-                      {student.cumulative_score}
+                      {student.totalScore}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 font-medium">Cumulative Score</div>
                   </div>

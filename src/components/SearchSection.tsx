@@ -2,25 +2,9 @@ import { useState } from 'react';
 import { Search, Trophy, TrendingUp, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useSearchStudents } from '@/hooks/useLeaderboard';
-import { getLeagueLabel, getInitials } from '@/lib/leaderboard-utils';
+import { getLeagueLabel, getInitials, type RankedStudent } from '@/lib/leaderboard-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type SearchResult = {
-  id: string;
-  name: string;
-  mobile: string | null;
-  league: string;
-  cumulative_score: number;
-  best_weekly_score: number;
-  projects_submitted: number;
-  attendance_count: number;
-  created_at: string;
-  globalRank: number;
-  leagueRank: number;
-  assignedLeague: string;
-};
-
-// ── League config (mirrors OverallLeaderboard) ──────────────────────────────
 const LEAGUE_CONFIG: Record<string, {
   laurelColor: string;
   titleColor: string;
@@ -117,13 +101,12 @@ function LaurelRight({ className }: { className?: string }) {
   );
 }
 
-function StudentResultCard({ student }: { student: SearchResult }) {
-  const league = student.assignedLeague || student.league;
+function StudentResultCard({ student }: { student: RankedStudent }) {
+  const league = student.league;
   const cfg = LEAGUE_CONFIG[league] ?? LEAGUE_CONFIG.bronze;
 
   return (
     <div className={`glass-card rounded-2xl overflow-hidden border shadow-md animate-scale-in ${cfg.glowBorder}`}>
-      {/* League header banner */}
       <div className={`px-5 py-3 ${cfg.badgeBg} border-b ${cfg.badgeBorder} flex items-center justify-center gap-2`}>
         <LaurelLeft className={`w-12 h-8 ${cfg.laurelColor} shrink-0`} />
         <span className={`text-sm font-black tracking-[0.16em] ${cfg.titleColor}`}>
@@ -133,7 +116,6 @@ function StudentResultCard({ student }: { student: SearchResult }) {
       </div>
 
       <div className="p-5">
-        {/* Avatar + Name + Rank */}
         <div className="flex items-center gap-4 mb-5">
           <div className={`w-14 h-14 rounded-2xl ${cfg.badgeBg} flex items-center justify-center text-lg font-black ${cfg.titleColor} shrink-0 border ${cfg.badgeBorder}`}>
             {getInitials(student.name)}
@@ -143,32 +125,23 @@ function StudentResultCard({ student }: { student: SearchResult }) {
             <div className="flex items-center gap-2 mt-1">
               <Trophy className={`w-3.5 h-3.5 ${cfg.scoreColor}`} />
               <span className={`text-sm font-semibold ${cfg.scoreColor}`}>
-                Rank #{student.globalRank} in {getLeagueLabel(league)} League
+                Rank #{student.rank} in {getLeagueLabel(league)} League
               </span>
             </div>
           </div>
-          {/* Global rank badge */}
           <div className={`shrink-0 w-14 h-14 rounded-2xl border-2 flex flex-col items-center justify-center ${cfg.rankBg}`}>
             <span className="text-xs font-semibold opacity-70">Rank</span>
-            <span className="text-2xl font-black leading-none">#{student.globalRank}</span>
+            <span className="text-2xl font-black leading-none">#{student.rank}</span>
           </div>
         </div>
 
-        {/* Performance metrics */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          {[
-            { label: 'Total Points', value: student.cumulative_score, highlight: true },
-            { label: 'Best Weekly Score', value: student.best_weekly_score, highlight: false },
-            { label: 'Projects Built', value: student.projects_submitted, highlight: false },
-          ].map(({ label, value, highlight }) => (
-            <div key={label} className="text-center p-3 rounded-xl bg-secondary/60 border border-border/40">
-              <div className={`text-xl font-black ${highlight ? cfg.scoreColor : 'text-foreground'}`}>{value}</div>
-              <div className="text-xs text-muted-foreground mt-0.5 leading-tight">{label}</div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 gap-3 mb-5">
+          <div className="text-center p-3 rounded-xl bg-secondary/60 border border-border/40">
+            <div className={`text-xl font-black ${cfg.scoreColor}`}>{student.totalScore}</div>
+            <div className="text-xs text-muted-foreground mt-0.5 leading-tight">Total Points</div>
+          </div>
         </div>
 
-        {/* Motivational footer */}
         <div className={`flex items-start gap-2.5 px-4 py-3 rounded-xl ${cfg.badgeBg} border ${cfg.badgeBorder}`}>
           <Sparkles className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.scoreColor}`} />
           <p className={`text-xs leading-relaxed ${cfg.titleColor}`}>
@@ -221,7 +194,6 @@ export default function SearchSection() {
           )}
         </div>
 
-        {/* Results */}
         <div className="flex flex-col gap-4">
           {isLoading && query.trim().length >= 2 && (
             <>
@@ -236,9 +208,6 @@ export default function SearchSection() {
                         <Skeleton className="h-4 w-32" />
                       </div>
                       <Skeleton className="w-14 h-14 rounded-2xl" />
-                    </div>
-                    <div className="grid grid-cols-4 gap-3 mb-4">
-                      {[0, 1, 2, 3].map((j) => <Skeleton key={j} className="h-16 rounded-xl" />)}
                     </div>
                     <Skeleton className="h-12 rounded-xl" />
                   </div>
@@ -259,7 +228,7 @@ export default function SearchSection() {
                 </p>
               </div>
               {results.map((student) => (
-                <StudentResultCard key={student.id} student={student as SearchResult} />
+                <StudentResultCard key={student.mobile} student={student} />
               ))}
             </>
           )}
