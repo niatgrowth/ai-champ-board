@@ -12,17 +12,15 @@ export interface StudentRow {
   winnerUp: number;
   runnerUp: number;
   weekNumber: number;
+  state: string;
 }
 
 export interface Student {
   mobile: string;
   name: string;
   totalScore: number; // This will now represent sum of final_score
-  totalWinnerUp: number;
-  totalRunnerUp: number;
   weeklyScores: Record<number, number>;
-  weeklyWinnerUp: Record<number, number>;
-  weeklyRunnerUp: Record<number, number>;
+  state: string;
 }
 
 function assertConfig() {
@@ -101,6 +99,7 @@ export async function fetchSheetRows(
   const finalScoreIdx = findIdx('final_score', 'final score', 'Final_Score');
   const winnerUpIdx = findIdx('winner_up', 'winner up', 'Winner-Up');
   const runnerUpIdx = findIdx('runner_up', 'runner up', 'Runner_Up');
+  const stateIdx = findIdx('state', 'location', 'region');
 
   if (nameIdx === -1 || mobileIdx === -1) return [];
 
@@ -125,9 +124,10 @@ export async function fetchSheetRows(
     const finalScore = finalScoreIdx !== -1 ? parseNum(rawFinalScore) : score;
     const winnerUp = parseNum(rawWinnerUp);
     const runnerUp = parseNum(rawRunnerUp);
+    const state = stateIdx !== -1 ? String(row[stateIdx] ?? '').trim() : '';
 
     const name = String(row[nameIdx] ?? '').trim();
-    rows.push({ name, mobile, score, finalScore, winnerUp, runnerUp, weekNumber });
+    rows.push({ name, mobile, score, finalScore, winnerUp, runnerUp, weekNumber, state });
   }
   return rows;
 }
@@ -147,27 +147,19 @@ export async function fetchAllStudents(): Promise<Student[]> {
         existing.weeklyScores[r.weekNumber] =
           Number(existing.weeklyScores[r.weekNumber] ?? 0) + Number(r.finalScore);
         existing.totalScore = Number(existing.totalScore) + Number(r.finalScore);
-        
-        existing.weeklyWinnerUp[r.weekNumber] = (existing.weeklyWinnerUp[r.weekNumber] ?? 0) + r.winnerUp;
-        existing.totalWinnerUp += r.winnerUp;
-        
-        existing.weeklyRunnerUp[r.weekNumber] = (existing.weeklyRunnerUp[r.weekNumber] ?? 0) + r.runnerUp;
-        existing.totalRunnerUp += r.runnerUp;
 
         if (r.weekNumber >= existing._latestWeekForName && r.name) {
           existing.name = r.name;
           existing._latestWeekForName = r.weekNumber;
+          if (r.state) existing.state = r.state;
         }
       } else {
         map.set(r.mobile, {
           mobile: r.mobile,
           name: r.name,
           totalScore: Number(r.finalScore),
-          totalWinnerUp: r.winnerUp,
-          totalRunnerUp: r.runnerUp,
           weeklyScores: { [r.weekNumber]: Number(r.finalScore) },
-          weeklyWinnerUp: { [r.weekNumber]: r.winnerUp },
-          weeklyRunnerUp: { [r.weekNumber]: r.runnerUp },
+          state: r.state,
           _latestWeekForName: r.weekNumber,
         });
       }

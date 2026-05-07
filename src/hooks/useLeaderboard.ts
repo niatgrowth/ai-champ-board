@@ -7,8 +7,6 @@ import {
 } from '@/lib/sheets';
 import {
   assignLeagues,
-  getMonthWeeks,
-  getAvailableMonths,
   type RankedStudent,
   type League,
 } from '@/lib/leaderboard-utils';
@@ -34,19 +32,11 @@ export function useAvailableWeeks() {
   });
 }
 
-export function useAvailableMonths() {
-  const weeks = useAvailableWeeks();
-  return {
-    ...weeks,
-    data: weeks.data ? getAvailableMonths(weeks.data) : undefined,
-  };
-}
-
 export interface WeeklyEntry {
   mobile: string;
   name: string;
   score: number; // raw
-  finalScore: number;
+  totalScore: number;
   winnerUp: number;
   runnerUp: number;
   rank: number;
@@ -92,8 +82,14 @@ export function useWeeklyLeaderboard(weekNumber: number | undefined) {
       }
 
       const sorted = Array.from(map.entries())
-        .map(([mobile, v]) => ({ mobile, ...v }))
-        .sort((a, b) => b.finalScore - a.finalScore);
+        .map(([mobile, v]) => {
+          const safeScore = Number(v.score) || 0;
+          const safeWinner = Number(v.winnerUp) || 0;
+          const safeRunner = Number(v.runnerUp) || 0;
+          const totalScore = safeScore + safeWinner + safeRunner;
+          return { mobile, ...v, totalScore };
+        })
+        .sort((a, b) => b.totalScore - a.totalScore);
 
       const total = sorted.length;
       const platCount = Math.max(1, Math.round(total * 0.1));
@@ -120,61 +116,6 @@ export function useOverallLeaderboard() {
     ...rest,
     data: data ? assignLeagues(data) : undefined,
   };
-}
-
-export interface MonthlyEntry {
-  mobile: string;
-  name: string;
-  monthScore: number;
-  monthWinnerUp: number;
-  monthRunnerUp: number;
-  rank: number;
-  weeksParticipated: number;
-  bestWeekScore: number;
-}
-
-export function useMonthlyLeaderboard(monthNumber: number | undefined) {
-  const { data: students, isLoading, error } = useAllStudents();
-  const weeks = monthNumber ? getMonthWeeks(monthNumber) : [];
-
-  const data: MonthlyEntry[] | undefined = students
-    ? (() => {
-        const out: MonthlyEntry[] = [];
-        for (const s of students) {
-          let monthScore = 0;
-          let monthWinnerUp = 0;
-          let monthRunnerUp = 0;
-          let weeksParticipated = 0;
-          let bestWeekScore = 0;
-          for (const w of weeks) {
-            const v = s.weeklyScores[w];
-            if (typeof v === 'number') {
-              monthScore += v;
-              monthWinnerUp += (s.weeklyWinnerUp[w] ?? 0);
-              monthRunnerUp += (s.weeklyRunnerUp[w] ?? 0);
-              weeksParticipated += 1;
-              if (v > bestWeekScore) bestWeekScore = v;
-            }
-          }
-          if (weeksParticipated > 0) {
-            out.push({
-              mobile: s.mobile,
-              name: s.name,
-              monthScore,
-              monthWinnerUp,
-              monthRunnerUp,
-              weeksParticipated,
-              bestWeekScore,
-              rank: 0,
-            });
-          }
-        }
-        out.sort((a, b) => b.monthScore - a.monthScore);
-        return out.map((e, i) => ({ ...e, rank: i + 1 }));
-      })()
-    : undefined;
-
-  return { data, isLoading, error };
 }
 
 export function useTopChampions() {

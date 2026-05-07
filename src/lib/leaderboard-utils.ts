@@ -35,20 +35,6 @@ export function assignLeagues(students: Student[]): RankedStudent[] {
   });
 }
 
-export function getMonthWeeks(monthNumber: number): number[] {
-  return Array.from({ length: 4 }, (_, i) => (monthNumber - 1) * 4 + i + 1);
-}
-
-export function getMonthFromWeek(weekNumber: number): number {
-  return Math.ceil(weekNumber / 4);
-}
-
-export function getAvailableMonths(availableWeeks: number[]): number[] {
-  const months = new Set<number>();
-  for (const w of availableWeeks) months.add(getMonthFromWeek(w));
-  return Array.from(months).sort((a, b) => a - b);
-}
-
 // ── UI helpers (kept from previous version; used by components) ──────────────
 
 export function getLeagueColor(league: League | string) {

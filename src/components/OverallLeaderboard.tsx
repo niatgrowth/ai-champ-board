@@ -161,10 +161,14 @@ function LeagueTable({
               <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
                 <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
                 <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
-                <TableHead className="text-muted-foreground text-center font-semibold">Winner Up</TableHead>
-                <TableHead className="text-muted-foreground text-center font-semibold">Runner Up</TableHead>
-                <TableHead className="text-muted-foreground text-right font-semibold">
-                  Total Points
+                <TableHead className="text-muted-foreground text-center font-semibold">
+                  Total Score
+                </TableHead>
+                <TableHead className="text-muted-foreground text-center hidden sm:table-cell font-semibold">
+                  Weeks Participated
+                </TableHead>
+                <TableHead className="text-muted-foreground text-center hidden md:table-cell font-semibold">
+                  State
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -189,18 +193,18 @@ function LeagueTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className="text-muted-foreground text-sm font-medium">
-                      {student.totalWinnerUp}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-muted-foreground text-sm font-medium">
-                      {student.totalRunnerUp}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
                     <span className={`font-bold ${league.scoreColor}`}>
                       {student.totalScore}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center hidden sm:table-cell">
+                    <span className="font-semibold text-foreground">
+                      {Object.keys(student.weeklyScores).length}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center hidden md:table-cell">
+                    <span className="font-medium text-foreground">
+                      {student.state || '-'}
                     </span>
                   </TableCell>
                 </TableRow>

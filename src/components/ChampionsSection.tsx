@@ -110,7 +110,7 @@ export default function ChampionsSection() {
                     <div className={`text-3xl font-black ${config.rankColor}`}>
                       {student.totalScore}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1 font-medium">Cumulative Score</div>
+                    <div className="text-xs text-muted-foreground mt-1 font-medium">Total Score</div>
                   </div>
 
                   {/* Podium step */}

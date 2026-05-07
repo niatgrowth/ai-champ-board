@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Trophy, Star, Search } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { useWeeklyLeaderboard, useAvailableWeeks } from '@/hooks/useLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { getInitials } from '@/lib/leaderboard-utils';
 
 function RankBadge({ rank }: { rank: number }) {
@@ -52,8 +53,24 @@ export default function WeeklyLeaderboard() {
     : undefined;
 
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const activeWeek = selectedWeek ?? currentWeek;
   const { data: scores, isLoading } = useWeeklyLeaderboard(activeWeek);
+
+  const filteredScores = scores?.filter((score) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      score.name.toLowerCase().includes(query) ||
+      (score.mobile && String(score.mobile).toLowerCase().includes(query))
+    );
+  }) ?? [];
+
+  const topPerformers = scores && scores.length > 0
+    ? scores.filter((s) => s.totalScore === scores[0].totalScore)
+    : [];
+  
+  const topPerformerNames = Array.from(new Set(topPerformers.map(s => s.name))).join(', ');
 
   return (
     <section id="weekly" className="py-16 px-4">
@@ -77,24 +94,46 @@ export default function WeeklyLeaderboard() {
                 {activeWeek ? `Week ${activeWeek} Scores` : 'Loading…'}
               </span>
             </div>
-            {availableWeeks && availableWeeks.length > 0 && activeWeek && (
-              <Select
-                value={String(activeWeek)}
-                onValueChange={(v) => setSelectedWeek(parseInt(v))}
-              >
-                <SelectTrigger className="w-36 bg-white border-border text-foreground text-sm shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-border">
-                  {availableWeeks.map((w) => (
-                    <SelectItem key={w} value={String(w)} className="text-foreground">
-                      Week {w}{w === currentWeek ? ' (Current)' : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search by name or mobile..."
+                  className="pl-9 bg-white border-border text-sm shadow-sm w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              {availableWeeks && availableWeeks.length > 0 && activeWeek && (
+                <Select
+                  value={String(activeWeek)}
+                  onValueChange={(v) => setSelectedWeek(parseInt(v))}
+                >
+                  <SelectTrigger className="w-full sm:w-36 bg-white border-border text-foreground text-sm shadow-sm shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-border">
+                    {availableWeeks.map((w) => (
+                      <SelectItem key={w} value={String(w)} className="text-foreground">
+                        Week {w}{w === currentWeek ? ' (Current)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
+
+          {!isLoading && scores && scores.length > 0 && (
+            <div className="px-5 py-3 bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-amber-200/40 flex flex-wrap items-center gap-2">
+              <Trophy className="w-4 h-4 text-yellow-600 shrink-0" />
+              <span className="text-sm font-semibold text-yellow-700 shrink-0">Top Performer of the Week:</span>
+              <span className="text-sm font-bold text-foreground">{topPerformerNames}</span>
+              <Star className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+              <span className="text-xs text-muted-foreground shrink-0">({scores[0].totalScore} Points)</span>
+            </div>
+          )}
 
           <div className="overflow-x-auto overflow-y-auto max-h-96 scrollbar-thin">
             <Table>
@@ -105,7 +144,7 @@ export default function WeeklyLeaderboard() {
                   <TableHead className="text-muted-foreground text-center font-semibold">Score</TableHead>
                   <TableHead className="text-muted-foreground text-center font-semibold">Winner Up</TableHead>
                   <TableHead className="text-muted-foreground text-center font-semibold">Runner Up</TableHead>
-                  <TableHead className="text-muted-foreground text-right font-semibold">Final Score</TableHead>
+                  <TableHead className="text-muted-foreground text-right font-semibold">Total Score</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,7 +159,13 @@ export default function WeeklyLeaderboard() {
                         <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
                       </TableRow>
                     ))
-                  : (scores ?? []).map((score) => (
+                  : filteredScores.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                          No students found matching your search.
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredScores.map((score) => (
                       <TableRow
                         key={score.mobile}
                         className={`border-border/30 hover:bg-secondary/40 transition-colors ${
@@ -148,7 +193,7 @@ export default function WeeklyLeaderboard() {
                           <span className="text-muted-foreground text-sm font-medium">{score.runnerUp}</span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <span className="font-bold text-primary text-base">{score.finalScore}</span>
+                          <span className="font-bold text-primary text-base">{score.totalScore}</span>
                         </TableCell>
                       </TableRow>
                     ))}
