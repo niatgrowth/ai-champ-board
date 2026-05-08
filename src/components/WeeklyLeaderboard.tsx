@@ -69,7 +69,7 @@ export default function WeeklyLeaderboard() {
   const topPerformers = scores && scores.length > 0
     ? scores.filter((s) => s.totalScore === scores[0].totalScore)
     : [];
-  
+
   const topPerformerNames = Array.from(new Set(topPerformers.map(s => s.name))).join(', ');
 
   return (
@@ -150,53 +150,52 @@ export default function WeeklyLeaderboard() {
               <TableBody>
                 {isLoading
                   ? Array.from({ length: 8 }).map((_, i) => (
-                      <TableRow key={i} className="border-border/20">
-                        <TableCell><Skeleton className="h-5 w-7" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-36" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
-                      </TableRow>
-                    ))
+                    <TableRow key={i} className="border-border/20">
+                      <TableCell><Skeleton className="h-5 w-7" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
+                    </TableRow>
+                  ))
                   : filteredScores.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                          No students found matching your search.
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredScores.map((score) => (
-                      <TableRow
-                        key={score.mobile}
-                        className={`border-border/30 hover:bg-secondary/40 transition-colors ${
-                          score.rank <= 3 ? 'table-row-highlight' : ''
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                        No students found matching your search.
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredScores.map((score) => (
+                    <TableRow
+                      key={score.mobile}
+                      className={`border-border/30 hover:bg-secondary/40 transition-colors ${score.rank <= 3 ? 'table-row-highlight' : ''
                         }`}
-                      >
-                        <TableCell><RankBadge rank={score.rank} /></TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0 border border-border/50">
-                              {getInitials(score.name)}
-                            </div>
-                            <span className="font-medium text-foreground text-sm">
-                              {score.name}
-                            </span>
+                    >
+                      <TableCell><RankBadge rank={score.rank} /></TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground shrink-0 border border-border/50">
+                            {getInitials(score.name)}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-muted-foreground text-sm font-medium">{score.score}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-muted-foreground text-sm font-medium">{score.winnerUp}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-muted-foreground text-sm font-medium">{score.runnerUp}</span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className="font-bold text-primary text-base">{score.totalScore}</span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <span className="font-medium text-foreground text-sm">
+                            {score.name}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-muted-foreground text-sm font-medium">{score.score}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-muted-foreground text-sm font-medium">{score.winnerUp}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-muted-foreground text-sm font-medium">{score.runnerUp}</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="font-bold text-primary text-base">{score.totalScore}</span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </div>
