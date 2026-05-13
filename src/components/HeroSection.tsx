@@ -40,7 +40,7 @@ export default function HeroSection() {
   void weeks;
 
   return (
-    <section id="home" className="relative pt-28 pb-16 px-4 overflow-hidden">
+    <section id="home" className="relative pt-24 md:pt-32 pb-12 md:pb-16 px-4 overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 hero-gradient pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/4 rounded-full blur-3xl pointer-events-none" />
@@ -52,7 +52,7 @@ export default function HeroSection() {
             AI Bootcamp Leaderboard
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-black text-foreground mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-foreground mb-4 leading-tight">
             Track the{' '}
             <span className="gold-gradient">Top Student Innovators</span>
           </h1>

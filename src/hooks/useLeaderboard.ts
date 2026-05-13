@@ -35,10 +35,8 @@ export function useAvailableWeeks() {
 export interface WeeklyEntry {
   mobile: string;
   name: string;
-  score: number; // raw
-  totalScore: number;
-  winnerUp: number;
-  runnerUp: number;
+  score: number;
+  state: string;
   rank: number;
   league: League;
 }
@@ -61,35 +59,27 @@ export function useWeeklyLeaderboard(weekNumber: number | undefined) {
       const rows = await fetchSheetRows(sheet.sheetName, weekNumber);
 
       // Group duplicates by mobile (sum)
-      const map = new Map<string, { name: string; score: number; finalScore: number; winnerUp: number; runnerUp: number }>();
+      const map = new Map<string, { name: string; finalScore: number; state: string }>();
       for (const r of rows) {
         const existing = map.get(r.mobile);
         if (existing) {
-          existing.score += r.score;
           existing.finalScore += r.finalScore;
-          existing.winnerUp += r.winnerUp;
-          existing.runnerUp += r.runnerUp;
           if (r.name) existing.name = r.name;
+          if (r.state) existing.state = r.state;
         } else {
           map.set(r.mobile, { 
             name: r.name, 
-            score: r.score, 
-            finalScore: r.finalScore, 
-            winnerUp: r.winnerUp, 
-            runnerUp: r.runnerUp 
+            finalScore: r.finalScore,
+            state: r.state || ''
           });
         }
       }
 
       const sorted = Array.from(map.entries())
         .map(([mobile, v]) => {
-          const safeScore = Number(v.score) || 0;
-          const safeWinner = Number(v.winnerUp) || 0;
-          const safeRunner = Number(v.runnerUp) || 0;
-          const totalScore = safeScore + safeWinner + safeRunner;
-          return { mobile, ...v, totalScore };
+          return { mobile, name: v.name, state: v.state, score: v.finalScore };
         })
-        .sort((a, b) => b.totalScore - a.totalScore);
+        .sort((a, b) => b.score - a.score);
 
       const total = sorted.length;
       const platCount = Math.max(1, Math.round(total * 0.1));

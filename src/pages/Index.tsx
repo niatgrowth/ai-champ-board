@@ -16,7 +16,7 @@ export default function Index() {
         <WeeklyLeaderboard />
         <SearchSection />
       </main>
-      <footer className="border-t border-border py-8 px-4 text-center bg-white/60">
+      <footer className="border-t border-border py-6 md:py-8 px-4 text-center bg-white/60">
         <p className="text-muted-foreground text-sm">
           AI Bootcamp - Powered By <span className="text-yellow-500 font-bold">NIAT India</span>
         </p>

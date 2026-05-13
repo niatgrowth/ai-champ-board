@@ -67,13 +67,13 @@ export default function WeeklyLeaderboard() {
   }) ?? [];
 
   const topPerformers = scores && scores.length > 0
-    ? scores.filter((s) => s.totalScore === scores[0].totalScore)
+    ? scores.filter((s) => s.score === scores[0].score)
     : [];
 
   const topPerformerNames = Array.from(new Set(topPerformers.map(s => s.name))).join(', ');
 
   return (
-    <section id="weekly" className="py-16 px-4">
+    <section id="weekly" className="py-10 md:py-16 px-3 sm:px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10 animate-fade-in">
           <div className="section-badge">
@@ -87,14 +87,14 @@ export default function WeeklyLeaderboard() {
         </div>
 
         <div className="glass-card rounded-2xl overflow-hidden animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border-b border-border/40 bg-gradient-to-r from-primary/5 to-transparent gap-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-5 border-b border-border/40 bg-gradient-to-r from-primary/5 to-transparent gap-4">
             <div className="flex items-center gap-2 flex-wrap">
               <CalendarDays className="w-5 h-5 text-primary" />
               <span className="font-semibold text-foreground">
                 {activeWeek ? `Week ${activeWeek} Scores` : 'Loading…'}
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -126,25 +126,26 @@ export default function WeeklyLeaderboard() {
           </div>
 
           {!isLoading && scores && scores.length > 0 && (
-            <div className="px-5 py-3 bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-amber-200/40 flex flex-wrap items-center gap-2">
-              <Trophy className="w-4 h-4 text-yellow-600 shrink-0" />
-              <span className="text-sm font-semibold text-yellow-700 shrink-0">Top Performer of the Week:</span>
-              <span className="text-sm font-bold text-foreground">{topPerformerNames}</span>
-              <Star className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
-              <span className="text-xs text-muted-foreground shrink-0">({scores[0].totalScore} Points)</span>
+            <div className="px-4 py-3 bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-amber-200/40 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center sm:justify-start gap-2 text-center sm:text-left">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="w-4 h-4 text-yellow-600 shrink-0" />
+                <span className="text-sm font-semibold text-yellow-700">Top Performer:</span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                <span className="text-sm font-bold text-foreground">{topPerformerNames}</span>
+                <Star className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                <span className="text-xs text-muted-foreground shrink-0">({scores[0].score} Points)</span>
+              </div>
             </div>
           )}
 
-          <div className="overflow-x-auto overflow-y-auto max-h-96 scrollbar-thin">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
-                  <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
-                  <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
-                  <TableHead className="text-muted-foreground text-center font-semibold">Score</TableHead>
-                  <TableHead className="text-muted-foreground text-center font-semibold">Winner Up</TableHead>
-                  <TableHead className="text-muted-foreground text-center font-semibold">Runner Up</TableHead>
-                  <TableHead className="text-muted-foreground text-right font-semibold">Total Score</TableHead>
+          <Table wrapperClassName="max-h-96 scrollbar-thin">
+            <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+              <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
+                  <TableHead className="text-muted-foreground w-12 sm:w-14 font-semibold">Rank</TableHead>
+                  <TableHead className="text-muted-foreground font-semibold whitespace-nowrap min-w-[140px]">Student Name</TableHead>
+                  <TableHead className="text-muted-foreground text-center font-semibold whitespace-nowrap min-w-[100px]">State</TableHead>
+                  <TableHead className="text-muted-foreground text-right font-semibold whitespace-nowrap">Score</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,15 +154,13 @@ export default function WeeklyLeaderboard() {
                     <TableRow key={i} className="border-border/20">
                       <TableCell><Skeleton className="h-5 w-7" /></TableCell>
                       <TableCell><Skeleton className="h-5 w-36" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-24 mx-auto" /></TableCell>
                       <TableCell><Skeleton className="h-5 w-14 ml-auto" /></TableCell>
                     </TableRow>
                   ))
                   : filteredScores.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                         No students found matching your search.
                       </TableCell>
                     </TableRow>
@@ -183,22 +182,15 @@ export default function WeeklyLeaderboard() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="text-muted-foreground text-sm font-medium">{score.score}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-muted-foreground text-sm font-medium">{score.winnerUp}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-muted-foreground text-sm font-medium">{score.runnerUp}</span>
+                        <span className="text-muted-foreground text-sm font-medium">{score.state || '-'}</span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="font-bold text-primary text-base">{score.totalScore}</span>
+                        <span className="font-bold text-primary text-base">{score.score}</span>
                       </TableCell>
                     </TableRow>
                   ))}
               </TableBody>
             </Table>
-          </div>
         </div>
       </div>
     </section>

@@ -137,12 +137,12 @@ function LeagueTable({
         className={`w-full p-5 ${league.headerClass} hover:opacity-90 transition-opacity`}
       >
         <div className="flex items-center justify-between w-full">
-          <div className="flex-1 flex items-center justify-center gap-2">
-            <LaurelLeft className={`w-14 h-9 ${league.laurelColor} shrink-0`} />
-            <span className={`text-base font-black tracking-[0.18em] ${league.titleColor} select-none`}>
+          <div className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2">
+            <LaurelLeft className={`w-10 h-7 sm:w-14 sm:h-9 ${league.laurelColor} shrink-0`} />
+            <span className={`text-sm sm:text-base font-black tracking-[0.15em] sm:tracking-[0.18em] ${league.titleColor} select-none text-center`}>
               {league.label}
             </span>
-            <LaurelRight className={`w-14 h-9 ${league.laurelColor} shrink-0`} />
+            <LaurelRight className={`w-10 h-7 sm:w-14 sm:h-9 ${league.laurelColor} shrink-0`} />
           </div>
           <div className="ml-3 shrink-0">
             {expanded ? (
@@ -155,13 +155,12 @@ function LeagueTable({
       </button>
 
       {expanded && (
-        <div className="overflow-x-auto overflow-y-auto max-h-96 scrollbar-thin">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
-                <TableHead className="text-muted-foreground w-14 font-semibold">Rank</TableHead>
-                <TableHead className="text-muted-foreground font-semibold">Student Name</TableHead>
-                <TableHead className="text-muted-foreground text-center font-semibold">
+        <Table wrapperClassName="max-h-96 scrollbar-thin">
+          <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+            <TableRow className="border-border/40 hover:bg-transparent bg-secondary/30">
+                <TableHead className="text-muted-foreground w-12 sm:w-14 font-semibold">Rank</TableHead>
+                <TableHead className="text-muted-foreground font-semibold whitespace-nowrap min-w-[140px]">Student Name</TableHead>
+                <TableHead className="text-muted-foreground text-center font-semibold whitespace-nowrap">
                   Total Score
                 </TableHead>
                 <TableHead className="text-muted-foreground text-center hidden sm:table-cell font-semibold">
@@ -211,7 +210,6 @@ function LeagueTable({
               ))}
             </TableBody>
           </Table>
-        </div>
       )}
     </div>
   );
@@ -230,7 +228,7 @@ export default function OverallLeaderboard() {
     : null;
 
   return (
-    <section id="leaderboard" className="py-16 px-4">
+    <section id="leaderboard" className="py-10 md:py-16 px-3 sm:px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10 animate-fade-in">
           <div className="section-badge">

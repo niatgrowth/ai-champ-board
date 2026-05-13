@@ -7,7 +7,7 @@ const PODIUM = [
   {
     rank: 2,
     label: 'Rank #2',
-    podiumHeight: 'h-20',
+    podiumHeight: 'h-10 md:h-20',
     podiumBg: 'bg-gradient-to-b from-slate-300 to-slate-400',
     cardBorder: 'border-slate-300/60',
     cardBg: 'from-slate-50 to-white',
@@ -21,7 +21,7 @@ const PODIUM = [
   {
     rank: 1,
     label: 'Rank #1',
-    podiumHeight: 'h-32',
+    podiumHeight: 'h-16 md:h-32',
     podiumBg: 'bg-gradient-to-b from-yellow-400 to-amber-500',
     cardBorder: 'border-yellow-400/70',
     cardBg: 'from-yellow-50 to-white',
@@ -35,7 +35,7 @@ const PODIUM = [
   {
     rank: 3,
     label: 'Rank #3',
-    podiumHeight: 'h-14',
+    podiumHeight: 'h-8 md:h-14',
     podiumBg: 'bg-gradient-to-b from-amber-600 to-amber-700',
     cardBorder: 'border-amber-500/50',
     cardBg: 'from-amber-50 to-white',
@@ -59,7 +59,7 @@ export default function ChampionsSection() {
   ];
 
   return (
-    <section id="champions" className="pt-28 pb-16 px-4">
+    <section id="champions" className="pt-20 md:pt-28 pb-12 md:pb-16 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12 animate-fade-in">
           <div className="section-badge">
@@ -83,12 +83,12 @@ export default function ChampionsSection() {
               return (
                 <div
                   key={student.mobile}
-                  className={`flex-1 max-w-[280px] w-full flex flex-col items-center animate-fade-in ${config.order}`}
+                  className={`flex-1 max-w-[280px] w-full flex flex-col items-center animate-fade-in ${config.order} mb-6 md:mb-0`}
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   {/* Card */}
                   <div
-                    className={`w-full glass-card rounded-2xl p-6 bg-gradient-to-b ${config.cardBg} border ${config.cardBorder} shadow-lg text-center`}
+                    className={`w-full glass-card rounded-2xl p-4 md:p-6 bg-gradient-to-b ${config.cardBg} border ${config.cardBorder} shadow-lg text-center`}
                   >
                     {/* Rank tag */}
                     <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold mb-4 ${config.rankBg} ${config.rankColor}`}>
@@ -97,17 +97,17 @@ export default function ChampionsSection() {
                     </div>
 
                     {/* Avatar */}
-                    <div className={`w-16 h-16 rounded-full border-2 ${config.avatarBg} flex items-center justify-center mx-auto mb-3`}>
-                      <span className={`text-xl font-black ${config.avatarText}`}>
+                    <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full border-2 ${config.avatarBg} flex items-center justify-center mx-auto mb-2 md:mb-3`}>
+                      <span className={`text-lg md:text-xl font-black ${config.avatarText}`}>
                         {getInitials(student.name)}
                       </span>
                     </div>
 
                     {/* Name */}
-                    <h3 className="text-base font-bold text-foreground mb-3 leading-tight">{student.name}</h3>
+                    <h3 className="text-sm md:text-base font-bold text-foreground mb-2 md:mb-3 leading-tight">{student.name}</h3>
 
                     {/* Score */}
-                    <div className={`text-3xl font-black ${config.rankColor}`}>
+                    <div className={`text-2xl md:text-3xl font-black ${config.rankColor}`}>
                       {student.totalScore}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 font-medium">Total Score</div>
@@ -121,7 +121,7 @@ export default function ChampionsSection() {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-16 h-16 rounded-full bg-white/20 blur-xl" />
                     </div>
-                    <span className="relative text-white font-black text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">{config.rank}</span>
+                    <span className="relative text-white font-black text-2xl md:text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">{config.rank}</span>
                   </div>
                 </div>
               );
