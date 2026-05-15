@@ -59,6 +59,28 @@ export async function fetchAllSheetNames(): Promise<
   return out;
 }
 
+export async function fetchAllMonthNames(): Promise<
+  Array<{ sheetName: string; monthNumber: number }>
+> {
+  assertConfig();
+  const url = `${BASE}/${SPREADSHEET_ID}?key=${API_KEY}&fields=sheets.properties(title)`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Failed to fetch spreadsheet metadata [${res.status}]: ${body}`);
+  }
+  const data = await res.json();
+  const sheets: Array<{ properties?: { title?: string } }> = data?.sheets ?? [];
+  const out: Array<{ sheetName: string; monthNumber: number }> = [];
+  for (const s of sheets) {
+    const title = s.properties?.title ?? '';
+    const m = /^month[- ]?(\d+)$/i.exec(title);
+    if (m) out.push({ sheetName: title, monthNumber: parseInt(m[1], 10) });
+  }
+  out.sort((a, b) => a.monthNumber - b.monthNumber);
+  return out;
+}
+
 export async function fetchSheetRows(
   sheetName: string,
   weekNumber: number
@@ -166,7 +188,9 @@ export async function fetchAllStudents(): Promise<Student[]> {
     }
   }
 
-  const out = Array.from(map.values()).map(({ _latestWeekForName, ...s }) => s);
+  const out = Array.from(map.values())
+    .map(({ _latestWeekForName, ...s }) => s)
+    .filter((s) => s.totalScore > 0);
   out.sort((a, b) => b.totalScore - a.totalScore);
   return out;
 }

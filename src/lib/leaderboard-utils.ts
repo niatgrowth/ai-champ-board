@@ -17,7 +17,8 @@ export interface RankedStudent extends Student {
  * Per spec: top 10% Platinum, next 20% Gold, next 30% Silver, next 40% Bronze.
  */
 export function assignLeagues(students: Student[]): RankedStudent[] {
-  const sorted = [...students].sort((a, b) => b.totalScore - a.totalScore);
+  const filtered = students.filter((s) => s.totalScore > 0);
+  const sorted = [...filtered].sort((a, b) => b.totalScore - a.totalScore);
   const total = sorted.length;
   if (total === 0) return [];
 

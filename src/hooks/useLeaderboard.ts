@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   fetchAllSheetNames,
+  fetchAllMonthNames,
   fetchAllStudents,
   fetchSheetRows,
   type Student,
@@ -79,6 +80,7 @@ export function useWeeklyLeaderboard(weekNumber: number | undefined) {
         .map(([mobile, v]) => {
           return { mobile, name: v.name, state: v.state, score: v.finalScore };
         })
+        .filter((s) => s.score > 0)
         .sort((a, b) => b.score - a.score);
 
       const total = sorted.length;
@@ -139,4 +141,74 @@ export function useSearchStudents(query: string) {
       : [];
 
   return { data, isLoading: enabled ? isLoading : false, isFetching, error };
+}
+
+export function useAvailableMonths() {
+  return useQuery({
+    queryKey: ['availableMonths'],
+    queryFn: async () => {
+      const sheets = await fetchAllMonthNames();
+      return sheets.map((s) => s.monthNumber);
+    },
+    staleTime: STALE,
+  });
+}
+
+export function useMonthlyLeaderboard(monthNumber: number | undefined) {
+  return useQuery({
+    queryKey: ['monthly', monthNumber],
+    queryFn: async (): Promise<WeeklyEntry[]> => {
+      if (!monthNumber) return [];
+      
+      const sheets = await fetchAllMonthNames();
+      const sheet = sheets.find((s) => s.monthNumber === monthNumber);
+      
+      if (!sheet) {
+        console.warn(`No sheet found for month ${monthNumber}. Available:`, sheets);
+        return [];
+      }
+      
+      const rows = await fetchSheetRows(sheet.sheetName, monthNumber);
+
+      // Group duplicates by mobile (sum)
+      const map = new Map<string, { name: string; finalScore: number; state: string }>();
+      for (const r of rows) {
+        const existing = map.get(r.mobile);
+        if (existing) {
+          existing.finalScore += r.finalScore;
+          if (r.name) existing.name = r.name;
+          if (r.state) existing.state = r.state;
+        } else {
+          map.set(r.mobile, { 
+            name: r.name, 
+            finalScore: r.finalScore,
+            state: r.state || ''
+          });
+        }
+      }
+
+      const sorted = Array.from(map.entries())
+        .map(([mobile, v]) => {
+          return { mobile, name: v.name, state: v.state, score: v.finalScore };
+        })
+        .filter((s) => s.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+      const total = sorted.length;
+      const platCount = Math.max(1, Math.round(total * 0.1));
+      const goldCount = Math.max(1, Math.round(total * 0.2));
+      const silverCount = Math.max(1, Math.round(total * 0.3));
+
+      return sorted.map((s, i) => {
+        let league: League;
+        if (i < platCount) league = 'platinum';
+        else if (i < platCount + goldCount) league = 'gold';
+        else if (i < platCount + goldCount + silverCount) league = 'silver';
+        else league = 'bronze';
+        return { ...s, rank: i + 1, league };
+      });
+    },
+    enabled: typeof monthNumber === 'number' && monthNumber > 0,
+    staleTime: STALE,
+  });
 }
